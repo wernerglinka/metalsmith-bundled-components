@@ -18,9 +18,12 @@
   "module": "./lib/index.js",
   "type": "module",
   "exports": {
-    "import": "./lib/index.js",
-    "require": "./lib/index.cjs",
-    "default": "./lib/index.js"
+    ".": {
+      "import": "./lib/index.js",
+      "require": "./lib/index.cjs",
+      "default": "./lib/index.js"
+    },
+    "./src/index.js": "./src/index.js"
   },
   "types": "lib/index.d.ts",
   "repository": {
@@ -29,8 +32,8 @@
   },
   "files": [
     "lib",
-    "src",
-    "README.md"
+    "README.md",
+    "LICENSE.md"
   ],
   "directories": {
     "lib": "lib",
