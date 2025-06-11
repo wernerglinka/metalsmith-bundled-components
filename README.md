@@ -268,6 +268,6 @@ All AI-assisted code has been reviewed and tested to ensure it meets project sta
 [metalsmith-url]: https://metalsmith.io
 [license-badge]: https://img.shields.io/github/license/wernerglinka/metalsmith-bundled-components
 [license-url]: LICENSE
-[coverage-badge]: https://img.shields.io/badge/test%20coverage-XX%25-brightgreen
+[coverage-badge]: https://img.shields.io/badge/test%20coverage-92%25-brightgreen
 [coverage-url]: #test-coverage
 [modules-badge]: https://img.shields.io/badge/modules-ESM%2FCJS-blue
