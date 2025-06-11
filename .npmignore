@@ -1,0 +1,43 @@
+# Development files
+.github/
+.vscode/
+test/
+src/*.test.js
+*.test.js
+coverage/
+.nyc_output/
+coverage.info
+
+# Config files
+.eslintrc*
+.prettier*
+.mocharc*
+.release-it*
+.editorconfig
+.nvmrc
+.gitignore
+.npmignore
+
+# Documentation that's not needed in the package
+CONTRIBUTING.md
+PROMPT-TEMPLATE.md
+CODE_OF_CONDUCT.md
+notes/
+scripts/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Source maps
+**/*.map
