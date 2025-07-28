@@ -1,6 +1,6 @@
 {
   "name": "metalsmith-bundled-components",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A Metalsmith plugin that discovers, orders, and bundles CSS and JavaScript files from component-based architectures",
   "keywords": [
     "metalsmith",
@@ -74,7 +74,7 @@
     "lint:check": "eslint --fix-dry-run .",
     "prepublishOnly": "npm run build",
     "release:patch": "release-it patch",
-    "release:minor": "release-it minor", 
+    "release:minor": "release-it minor",
     "release:major": "release-it major",
     "release:check": "npm run lint:check && npm run build && release-it --dry-run",
     "test": "c8 --include=src/**/*.js mocha 'test/index.js' 'test/cjs.test.cjs' 'test/unit/**/*.js' -t 15000",
