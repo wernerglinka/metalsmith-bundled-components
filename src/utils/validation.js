@@ -127,6 +127,111 @@ function generateTip(value, rule) {
 }
 
 /**
+ * Validate type constraint
+ * @param {*} value - Value to validate
+ * @param {ValidationRule} rule - Validation rule
+ * @param {string} propertyPath - Property path for error messages
+ * @returns {ValidationResult} Validation result
+ */
+function validateTypeConstraint(value, rule, propertyPath) {
+  if (!rule.type) {
+    return { valid: true };
+  }
+  
+  const actualType = Array.isArray(value) ? 'array' : typeof value;
+  
+  if (actualType !== rule.type) {
+    const tip = generateTip(value, rule);
+    return {
+      valid: false,
+      error: `${propertyPath}: expected ${rule.type}, got ${actualType} "${value}"${tip ? `\nTip: ${tip}` : ''}`
+    };
+  }
+  
+  return { valid: true };
+}
+
+/**
+ * Validate const constraint
+ * @param {*} value - Value to validate
+ * @param {ValidationRule} rule - Validation rule
+ * @param {string} propertyPath - Property path for error messages
+ * @returns {ValidationResult} Validation result
+ */
+function validateConstConstraint(value, rule, propertyPath) {
+  if (rule.const === undefined) {
+    return { valid: true };
+  }
+  
+  if (value !== rule.const) {
+    return {
+      valid: false,
+      error: `${propertyPath}: expected "${rule.const}", got "${value}"`
+    };
+  }
+  
+  return { valid: true };
+}
+
+/**
+ * Validate enum constraint
+ * @param {*} value - Value to validate
+ * @param {ValidationRule} rule - Validation rule
+ * @param {string} propertyPath - Property path for error messages
+ * @returns {ValidationResult} Validation result
+ */
+function validateEnumConstraint(value, rule, propertyPath) {
+  if (!rule.enum) {
+    return { valid: true };
+  }
+  
+  if (!rule.enum.includes(value)) {
+    const tip = generateTip(value, rule);
+    return {
+      valid: false,
+      error: `${propertyPath}: "${value}" is invalid. Must be one of: ${rule.enum.join(', ')}${tip ? `\nTip: ${tip}` : ''}`
+    };
+  }
+  
+  return { valid: true };
+}
+
+/**
+ * Validate array items
+ * @param {Array} value - Array to validate
+ * @param {ValidationRule} rule - Validation rule
+ * @param {string} propertyPath - Property path for error messages
+ * @returns {ValidationResult} Validation result
+ */
+function validateArrayItems(value, rule, propertyPath) {
+  if (rule.type !== 'array' || !rule.items || !Array.isArray(value)) {
+    return { valid: true };
+  }
+  
+  for (let i = 0; i < value.length; i++) {
+    const item = value[i];
+    const itemPath = `${propertyPath}[${i}]`;
+    
+    if (rule.items.properties) {
+      const itemValidation = validateObjectProperties(item, rule.items.properties, itemPath);
+      if (!itemValidation.valid) {
+        return itemValidation;
+      }
+    }
+    
+    // If items has type/enum/const rules, validate the item directly
+    if (rule.items.type || rule.items.enum || rule.items.const !== undefined) {
+      const itemResult = validateProperty(item, rule.items, itemPath);
+      if (!itemResult.valid) {
+        return itemResult;
+      }
+    }
+  }
+  
+  return { valid: true };
+}
+
+/**
  * Validate a single property against its validation rule
  * @param {*} value - Property value to validate
  * @param {ValidationRule} rule - Validation rule
@@ -138,57 +243,25 @@ function validateProperty(value, rule, propertyPath) {
     return { valid: true }; // Optional properties
   }
   
-  // Type validation
-  if (rule.type) {
-    const actualType = Array.isArray(value) ? 'array' : typeof value;
-    
-    if (actualType !== rule.type) {
-      const tip = generateTip(value, rule);
-      return {
-        valid: false,
-        error: `${propertyPath}: expected ${rule.type}, got ${actualType} "${value}"${tip ? `\nTip: ${tip}` : ''}`
-      };
-    }
+  // Run all validation constraints
+  const typeResult = validateTypeConstraint(value, rule, propertyPath);
+  if (!typeResult.valid) {
+    return typeResult;
   }
   
-  // Const validation
-  if (rule.const !== undefined && value !== rule.const) {
-    return {
-      valid: false,
-      error: `${propertyPath}: expected "${rule.const}", got "${value}"`
-    };
+  const constResult = validateConstConstraint(value, rule, propertyPath);
+  if (!constResult.valid) {
+    return constResult;
   }
   
-  // Enum validation
-  if (rule.enum && !rule.enum.includes(value)) {
-    const tip = generateTip(value, rule);
-    return {
-      valid: false,
-      error: `${propertyPath}: "${value}" is invalid. Must be one of: ${rule.enum.join(', ')}${tip ? `\nTip: ${tip}` : ''}`
-    };
+  const enumResult = validateEnumConstraint(value, rule, propertyPath);
+  if (!enumResult.valid) {
+    return enumResult;
   }
   
-  // Array validation
-  if (rule.type === 'array' && rule.items && Array.isArray(value)) {
-    for (let i = 0; i < value.length; i++) {
-      const item = value[i];
-      const itemPath = `${propertyPath}[${i}]`;
-      
-      if (rule.items.properties) {
-        const itemValidation = validateObjectProperties(item, rule.items.properties, itemPath);
-        if (!itemValidation.valid) {
-          return itemValidation;
-        }
-      }
-      
-      // If items has type/enum/const rules, validate the item directly
-      if (rule.items.type || rule.items.enum || rule.items.const !== undefined) {
-        const itemResult = validateProperty(item, rule.items, itemPath);
-        if (!itemResult.valid) {
-          return itemResult;
-        }
-      }
-    }
+  const arrayResult = validateArrayItems(value, rule, propertyPath);
+  if (!arrayResult.valid) {
+    return arrayResult;
   }
   
   return { valid: true };
@@ -336,5 +409,9 @@ export {
   validateSections,
   validateObjectProperties,
   validateRequiredProperties,
+  validateTypeConstraint,
+  validateConstConstraint,
+  validateEnumConstraint,
+  validateArrayItems,
   generateTip
 };

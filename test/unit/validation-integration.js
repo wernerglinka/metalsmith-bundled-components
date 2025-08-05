@@ -157,33 +157,7 @@ describe('Validation Integration', () => {
     });
 
     it('should catch const validation errors', async () => {
-      const files = {
-        'index.html': {
-          sections: [
-            {
-              sectionType: 'hero', // Valid sectionType but with wrong const
-              // The hero component expects const: 'hero', but let's test a different scenario
-            }
-          ]
-        }
-      };
-
-      // First, let's create a section that violates const validation
-      const filesWithConstError = {
-        'index.html': {
-          sections: [
-            {
-              sectionType: 'banner',
-              // Missing the required const validation - banner manifest requires sectionType: 'banner'
-              // but we'll use a different approach since the component lookup is by sectionType
-            }
-          ]
-        }
-      };
-
-      // This test should actually use a scenario where we have proper const validation
-      // The current implementation skips validation if component isn't found
-      // Let's test with a valid component that has const validation
+      // Test with a valid component that has const validation
       const validConstTest = {
         'index.html': {
           sections: [
