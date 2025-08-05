@@ -111,6 +111,7 @@ The resulting bundled CSS will be properly ordered by dependencies, prefixed for
 | `cssDest` | Destination path for bundled CSS | `String` | `'assets/components.css'` |
 | `jsDest` | Destination path for bundled JavaScript | `String` | `'assets/components.js'` |
 | `postcss` | PostCSS configuration (enabled, plugins, options) | `Object` | `{ enabled: false, plugins: [], options: {} }` |
+| `validation` | Section validation configuration | `Object` | `{ enabled: true, strict: false, reportAllErrors: true }` |
 
 ## Component Structure
 
@@ -162,6 +163,117 @@ Each component can include an optional `manifest.json` file:
 If no manifest file is present, the plugin will auto-generate one based on the component name:
 - It will look for `<component-name>.css` and `<component-name>.js` files
 - Dependencies must be explicitly defined in a manifest file
+
+## Section Validation
+
+The plugin includes powerful validation capabilities to catch common configuration errors in your frontmatter/YAML that would otherwise result in "silent failures" - where the site builds successfully but renders incorrectly.
+
+### Common Problems Solved
+
+- **Type coercion issues**: `isAnimated: "false"` (string) always evaluates to `true` in templates
+- **Invalid enum values**: `buttonStyle: "blue"` when CSS only supports `primary`, `secondary`, `ghost`
+- **Misspelled properties**: `titleTag: "header"` instead of valid HTML heading tags
+
+### Enhanced Manifest with Validation Rules
+
+Add a `validation` object to your component's `manifest.json`:
+
+```json
+{
+  "name": "hero",
+  "type": "section",
+  "styles": ["hero.css"],
+  "scripts": [],
+  "dependencies": ["button", "image"],
+  "validation": {
+    "required": ["sectionType"],
+    "properties": {
+      "sectionType": {
+        "type": "string",
+        "const": "hero"
+      },
+      "isReverse": {
+        "type": "boolean"
+      },
+      "containerFields.isAnimated": {
+        "type": "boolean"
+      },
+      "containerFields.background.imageScreen": {
+        "type": "string",
+        "enum": ["light", "dark", "none"]
+      },
+      "text.titleTag": {
+        "type": "string",
+        "enum": ["h1", "h2", "h3", "h4", "h5", "h6"]
+      },
+      "ctas": {
+        "type": "array",
+        "items": {
+          "properties": {
+            "isButton": {
+              "type": "boolean"
+            },
+            "buttonStyle": {
+              "type": "string",
+              "enum": ["primary", "secondary", "ghost", "none"]
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+### Validation Features
+
+**Type Validation**: Ensure fields are actual booleans, strings, numbers, or arrays - not string representations.
+
+**Enum Validation**: Restrict values to predefined options (e.g., `titleTag: ["h1", "h2", "h3"]`).
+
+**Nested Properties**: Use dot notation for nested validation (`containerFields.isAnimated`).
+
+**Array Items**: Validate properties within array elements.
+
+**Helpful Error Messages**: Get actionable error messages with file context and helpful tips.
+
+### Error Message Example
+
+```
+❌ Section Validation Errors:
+
+Section 0 (hero) in src/index.md:
+  - containerFields.isAnimated: expected boolean, got string "false"
+  - text.titleTag: "header" is invalid. Must be one of: h1, h2, h3, h4, h5, h6
+  - ctas[0].buttonStyle: "blue" is invalid. Must be one of: primary, secondary, ghost, none
+
+Tip: String "false" evaluates to true in templates. Use boolean false instead.
+```
+
+### Validation Configuration
+
+Configure validation behavior in plugin options:
+
+```js
+Metalsmith(__dirname)
+  .use(bundledComponents({
+    validation: {
+      enabled: true,           // Enable/disable validation
+      strict: false,           // Fail build on errors vs warnings only
+      reportAllErrors: true    // Report all errors vs stop on first
+    }
+  }))
+  .build((err) => {
+    if (err) throw err;
+  });
+```
+
+### Backward Compatibility
+
+- Validation is **completely optional** - components without validation rules work unchanged
+- Existing projects continue building without any modifications
+- Add validation rules gradually as you update components
+- No performance impact when validation is disabled
 
 ## Additional PostCSS Examples
 

@@ -2,7 +2,8 @@
   "github": {
     "release": true,
     "releaseName": "${name} v${version}",
-    "web": true
+    "web": true,
+    "tokenRef": "GH_TOKEN"
   },
   "git": {
     "commitMessage": "Release ${version}",
