@@ -82,7 +82,8 @@
     "test:unit": "mocha 'test/unit/**/*.js' -t 5000",
     "test:esm": "c8 --include=src/**/*.js mocha test/index.js -t 15000",
     "test:cjs": "c8 --include=src/**/*.js mocha test/cjs.test.cjs -t 15000",
-    "depcheck": "depcheck"
+    "depcheck": "depcheck",
+    "audit": "npm audit"
   },
   "engines": {
     "node": ">=18.0.0"
