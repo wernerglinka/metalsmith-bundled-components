@@ -33,5 +33,5 @@ Thumbs.db
 *.tgz
 
 # Test outputs
-test/*/build/
+test/**/build/
 **/.claude/settings.local.json
