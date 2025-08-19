@@ -1,0 +1,28 @@
+body{font-family:Helvetica Neue,Helvetica,Arial,sans-serif;line-height:1.6;margin:0;padding:0;background-color:#f5f5f5}h1,h2,h3,h4,h5,h6{margin-top:0;margin-bottom:1rem}
+
+
+/* Button component with lots of comments for minification testing */
+.button {
+  /* Primary button styling */
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #3498db;
+  color: white;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: bold;
+  /* Transition effects */
+  transition: all 0.3s ease;
+}
+
+/* Hover state */
+.button:hover {
+  background-color: #2980b9;
+  transform: translateY(-1px);
+}
+
+/* Section button styles */
+.section-button {
+  text-align: center;
+  padding: 20px;
+}
