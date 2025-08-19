@@ -1,0 +1,47 @@
+:root {
+  --font-primary: 'Helvetica Neue', sans-serif;
+  --font-h1: 2.5rem;
+  --line-height: 1.6;
+  --space-sm: 1rem;
+  --space-lg: 2rem;
+  --color-primary: #3498db;
+  --color-secondary: #2c3e50;
+  --color-text: #333;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-primary);
+  line-height: var(--line-height);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-sm);
+}
+
+.text {
+  font-family: var(--font-primary);
+  line-height: var(--line-height);
+}
+
+.banner {
+  padding: var(--space-lg);
+  background: var(--color-primary);
+}
+
+.banner__title {
+  font-size: var(--font-h1);
+  color: var(--color-text);
+}
+
+.footer {
+  padding: var(--space-sm);
+  background: var(--color-secondary);
+}

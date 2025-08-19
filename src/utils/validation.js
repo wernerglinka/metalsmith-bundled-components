@@ -34,17 +34,17 @@
  * @param {string} path - Dot notation path (e.g., "containerFields.isAnimated")
  * @returns {*} Property value or undefined
  */
-function getNestedProperty(obj, path) {
-  if (!obj || typeof obj !== 'object') {
+function getNestedProperty( obj, path ) {
+  if ( !obj || typeof obj !== 'object' ) {
     return undefined;
   }
   
-  return path.split('.').reduce((current, key) => {
-    if (current && typeof current === 'object') {
+  return path.split( '.' ).reduce( ( current, key ) => {
+    if ( current && typeof current === 'object' ) {
       return current[key];
     }
     return undefined;
-  }, obj);
+  }, obj );
 }
 
 /**
@@ -53,16 +53,16 @@ function getNestedProperty(obj, path) {
  * @param {string} path - Dot notation path
  * @param {*} value - Value to set
  */
-function setNestedProperty(obj, path, value) {
-  const keys = path.split('.');
+function setNestedProperty( obj, path, value ) {
+  const keys = path.split( '.' );
   const lastKey = keys.pop();
   
-  const target = keys.reduce((current, key) => {
-    if (!current[key] || typeof current[key] !== 'object') {
+  const target = keys.reduce( ( current, key ) => {
+    if ( !current[key] || typeof current[key] !== 'object' ) {
       current[key] = {};
     }
     return current[key];
-  }, obj);
+  }, obj );
   
   target[lastKey] = value;
 }
@@ -73,16 +73,16 @@ function setNestedProperty(obj, path, value) {
  * @param {string} path - Dot notation path
  * @returns {boolean} Whether property exists
  */
-function hasNestedProperty(obj, path) {
-  if (!obj || typeof obj !== 'object') {
+function hasNestedProperty( obj, path ) {
+  if ( !obj || typeof obj !== 'object' ) {
     return false;
   }
   
-  const keys = path.split('.');
+  const keys = path.split( '.' );
   let current = obj;
   
-  for (const key of keys) {
-    if (!current || typeof current !== 'object' || !(key in current)) {
+  for ( const key of keys ) {
+    if ( !current || typeof current !== 'object' || !( key in current ) ) {
       return false;
     }
     current = current[key];
@@ -97,28 +97,28 @@ function hasNestedProperty(obj, path) {
  * @param {ValidationRule} rule - Validation rule
  * @returns {string|null} Helpful tip or null
  */
-function generateTip(value, rule) {
+function generateTip( value, rule ) {
   // String "false" or "true" when boolean expected
-  if (rule.type === 'boolean' && typeof value === 'string') {
-    if (value.toLowerCase() === 'false' || value.toLowerCase() === 'true') {
+  if ( rule.type === 'boolean' && typeof value === 'string' ) {
+    if ( value.toLowerCase() === 'false' || value.toLowerCase() === 'true' ) {
       return `String "${value}" evaluates to true in templates. Use boolean ${value.toLowerCase()} instead.`;
     }
   }
   
   // String number when number expected
-  if (rule.type === 'number' && typeof value === 'string' && !isNaN(Number(value))) {
+  if ( rule.type === 'number' && typeof value === 'string' && !isNaN( Number( value ) ) ) {
     return `String "${value}" should be a number. Remove quotes: ${value}`;
   }
   
   // Common misspellings for titleTag
-  if (rule.enum && rule.enum.includes('h1') && typeof value === 'string') {
+  if ( rule.enum && rule.enum.includes( 'h1' ) && typeof value === 'string' ) {
     const commonMisspellings = {
       'header': 'h1, h2, h3, h4, h5, or h6',
       'heading': 'h1, h2, h3, h4, h5, or h6',
       'title': 'h1, h2, h3, h4, h5, or h6'
     };
     
-    if (commonMisspellings[value.toLowerCase()]) {
+    if ( commonMisspellings[value.toLowerCase()] ) {
       return `Use ${commonMisspellings[value.toLowerCase()]} instead of "${value}".`;
     }
   }
@@ -133,15 +133,15 @@ function generateTip(value, rule) {
  * @param {string} propertyPath - Property path for error messages
  * @returns {ValidationResult} Validation result
  */
-function validateTypeConstraint(value, rule, propertyPath) {
-  if (!rule.type) {
+function validateTypeConstraint( value, rule, propertyPath ) {
+  if ( !rule.type ) {
     return { valid: true };
   }
   
-  const actualType = Array.isArray(value) ? 'array' : typeof value;
+  const actualType = Array.isArray( value ) ? 'array' : typeof value;
   
-  if (actualType !== rule.type) {
-    const tip = generateTip(value, rule);
+  if ( actualType !== rule.type ) {
+    const tip = generateTip( value, rule );
     return {
       valid: false,
       error: `${propertyPath}: expected ${rule.type}, got ${actualType} "${value}"${tip ? `\nTip: ${tip}` : ''}`
@@ -158,12 +158,12 @@ function validateTypeConstraint(value, rule, propertyPath) {
  * @param {string} propertyPath - Property path for error messages
  * @returns {ValidationResult} Validation result
  */
-function validateConstConstraint(value, rule, propertyPath) {
-  if (rule.const === undefined) {
+function validateConstConstraint( value, rule, propertyPath ) {
+  if ( rule.const === undefined ) {
     return { valid: true };
   }
   
-  if (value !== rule.const) {
+  if ( value !== rule.const ) {
     return {
       valid: false,
       error: `${propertyPath}: expected "${rule.const}", got "${value}"`
@@ -180,16 +180,16 @@ function validateConstConstraint(value, rule, propertyPath) {
  * @param {string} propertyPath - Property path for error messages
  * @returns {ValidationResult} Validation result
  */
-function validateEnumConstraint(value, rule, propertyPath) {
-  if (!rule.enum) {
+function validateEnumConstraint( value, rule, propertyPath ) {
+  if ( !rule.enum ) {
     return { valid: true };
   }
   
-  if (!rule.enum.includes(value)) {
-    const tip = generateTip(value, rule);
+  if ( !rule.enum.includes( value ) ) {
+    const tip = generateTip( value, rule );
     return {
       valid: false,
-      error: `${propertyPath}: "${value}" is invalid. Must be one of: ${rule.enum.join(', ')}${tip ? `\nTip: ${tip}` : ''}`
+      error: `${propertyPath}: "${value}" is invalid. Must be one of: ${rule.enum.join( ', ' )}${tip ? `\nTip: ${tip}` : ''}`
     };
   }
   
@@ -203,26 +203,26 @@ function validateEnumConstraint(value, rule, propertyPath) {
  * @param {string} propertyPath - Property path for error messages
  * @returns {ValidationResult} Validation result
  */
-function validateArrayItems(value, rule, propertyPath) {
-  if (rule.type !== 'array' || !rule.items || !Array.isArray(value)) {
+function validateArrayItems( value, rule, propertyPath ) {
+  if ( rule.type !== 'array' || !rule.items || !Array.isArray( value ) ) {
     return { valid: true };
   }
   
-  for (let i = 0; i < value.length; i++) {
+  for ( let i = 0; i < value.length; i++ ) {
     const item = value[i];
     const itemPath = `${propertyPath}[${i}]`;
     
-    if (rule.items.properties) {
-      const itemValidation = validateObjectProperties(item, rule.items.properties, itemPath);
-      if (!itemValidation.valid) {
+    if ( rule.items.properties ) {
+      const itemValidation = validateObjectProperties( item, rule.items.properties, itemPath );
+      if ( !itemValidation.valid ) {
         return itemValidation;
       }
     }
     
     // If items has type/enum/const rules, validate the item directly
-    if (rule.items.type || rule.items.enum || rule.items.const !== undefined) {
-      const itemResult = validateProperty(item, rule.items, itemPath);
-      if (!itemResult.valid) {
+    if ( rule.items.type || rule.items.enum || rule.items.const !== undefined ) {
+      const itemResult = validateProperty( item, rule.items, itemPath );
+      if ( !itemResult.valid ) {
         return itemResult;
       }
     }
@@ -238,29 +238,29 @@ function validateArrayItems(value, rule, propertyPath) {
  * @param {string} propertyPath - Property path for error messages
  * @returns {ValidationResult} Validation result
  */
-function validateProperty(value, rule, propertyPath) {
-  if (value === undefined || value === null) {
+function validateProperty( value, rule, propertyPath ) {
+  if ( value === undefined || value === null ) {
     return { valid: true }; // Optional properties
   }
   
   // Run all validation constraints
-  const typeResult = validateTypeConstraint(value, rule, propertyPath);
-  if (!typeResult.valid) {
+  const typeResult = validateTypeConstraint( value, rule, propertyPath );
+  if ( !typeResult.valid ) {
     return typeResult;
   }
   
-  const constResult = validateConstConstraint(value, rule, propertyPath);
-  if (!constResult.valid) {
+  const constResult = validateConstConstraint( value, rule, propertyPath );
+  if ( !constResult.valid ) {
     return constResult;
   }
   
-  const enumResult = validateEnumConstraint(value, rule, propertyPath);
-  if (!enumResult.valid) {
+  const enumResult = validateEnumConstraint( value, rule, propertyPath );
+  if ( !enumResult.valid ) {
     return enumResult;
   }
   
-  const arrayResult = validateArrayItems(value, rule, propertyPath);
-  if (!arrayResult.valid) {
+  const arrayResult = validateArrayItems( value, rule, propertyPath );
+  if ( !arrayResult.valid ) {
     return arrayResult;
   }
   
@@ -274,13 +274,13 @@ function validateProperty(value, rule, propertyPath) {
  * @param {string} [basePath] - Base path for nested error messages
  * @returns {ValidationResult} Validation result
  */
-function validateObjectProperties(obj, properties, basePath = '') {
-  for (const [propertyPath, rule] of Object.entries(properties)) {
+function validateObjectProperties( obj, properties, basePath = '' ) {
+  for ( const [propertyPath, rule] of Object.entries( properties ) ) {
     const fullPath = basePath ? `${basePath}.${propertyPath}` : propertyPath;
-    const value = getNestedProperty(obj, propertyPath);
+    const value = getNestedProperty( obj, propertyPath );
     
-    const result = validateProperty(value, rule, fullPath);
-    if (!result.valid) {
+    const result = validateProperty( value, rule, fullPath );
+    if ( !result.valid ) {
       return result;
     }
   }
@@ -294,9 +294,9 @@ function validateObjectProperties(obj, properties, basePath = '') {
  * @param {string[]} required - Array of required property paths
  * @returns {ValidationResult} Validation result
  */
-function validateRequiredProperties(obj, required) {
-  for (const propertyPath of required) {
-    if (!hasNestedProperty(obj, propertyPath)) {
+function validateRequiredProperties( obj, required ) {
+  for ( const propertyPath of required ) {
+    if ( !hasNestedProperty( obj, propertyPath ) ) {
       return {
         valid: false,
         error: `${propertyPath}: required property is missing`
@@ -314,15 +314,15 @@ function validateRequiredProperties(obj, required) {
  * @param {string} [context] - Context information for error messages
  * @returns {ValidationResult} Validation result
  */
-function validateSection(section, validation, context = '') {
-  if (!validation || typeof validation !== 'object') {
+function validateSection( section, validation, context = '' ) {
+  if ( !validation || typeof validation !== 'object' ) {
     return { valid: true }; // No validation rules
   }
   
   // Validate required properties
-  if (validation.required && Array.isArray(validation.required)) {
-    const requiredResult = validateRequiredProperties(section, validation.required);
-    if (!requiredResult.valid) {
+  if ( validation.required && Array.isArray( validation.required ) ) {
+    const requiredResult = validateRequiredProperties( section, validation.required );
+    if ( !requiredResult.valid ) {
       const contextPrefix = context ? `${context}\n  ` : '';
       return {
         valid: false,
@@ -332,9 +332,9 @@ function validateSection(section, validation, context = '') {
   }
   
   // Validate properties
-  if (validation.properties) {
-    const propertiesResult = validateObjectProperties(section, validation.properties);
-    if (!propertiesResult.valid) {
+  if ( validation.properties ) {
+    const propertiesResult = validateObjectProperties( section, validation.properties );
+    if ( !propertiesResult.valid ) {
       const contextPrefix = context ? `${context}\n  ` : '';
       return {
         valid: false,
@@ -353,26 +353,26 @@ function validateSection(section, validation, context = '') {
  * @param {string} [fileName] - File name for error context
  * @returns {Array<ValidationError>} Array of validation errors
  */
-function validateSections(sections, getManifest, fileName = '') {
+function validateSections( sections, getManifest, fileName = '' ) {
   const errors = [];
   
-  if (!Array.isArray(sections)) {
+  if ( !Array.isArray( sections ) ) {
     return errors;
   }
   
-  sections.forEach((section, index) => {
-    if (!section || typeof section !== 'object') {
+  sections.forEach( ( section, index ) => {
+    if ( !section || typeof section !== 'object' ) {
       return;
     }
     
     const sectionType = section.sectionType;
-    if (!sectionType) {
+    if ( !sectionType ) {
       return; // Skip sections without sectionType
     }
     
     try {
-      const manifest = getManifest(sectionType);
-      if (!manifest || !manifest.validation) {
+      const manifest = getManifest( sectionType );
+      if ( !manifest || !manifest.validation ) {
         return; // No validation rules for this component
       }
       
@@ -380,22 +380,22 @@ function validateSections(sections, getManifest, fileName = '') {
         ? `Section ${index} (${sectionType}) in ${fileName}:`
         : `Section ${index} (${sectionType}):`;
       
-      const result = validateSection(section, manifest.validation, context);
-      if (!result.valid) {
-        errors.push({
+      const result = validateSection( section, manifest.validation, context );
+      if ( !result.valid ) {
+        errors.push( {
           propertyPath: `sections[${index}]`,
           message: result.error,
           value: section,
           sectionType,
           sectionIndex: index,
           fileName
-        });
+        } );
       }
-    } catch (error) {
+    } catch ( error ) {
       // Skip validation if manifest loading fails
-      console.warn(`Warning: Could not load manifest for section type "${sectionType}": ${error.message}`);
+      console.warn( `Warning: Could not load manifest for section type "${sectionType}": ${error.message}` );
     }
-  });
+  } );
   
   return errors;
 }

@@ -82,7 +82,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## metalsmith-bundled-components
 
-This Metalsmith plugin automatically discovers, orders, and bundles CSS and JavaScript files from component-based architectures. It solves the problem of keeping component assets (styles and scripts) colocated with their templates while producing optimized, dependency-ordered output files.
+This Metalsmith plugin automatically discovers and bundles CSS and JavaScript files from component-based architectures. It uses esbuild.build() with plugins for modern, fast bundling with tree shaking, PostCSS integration, CSS @import resolution, complete minification, and supports bundling main application entry points alongside components.
 
 ## Key Commands
 
@@ -129,54 +129,50 @@ npm run release
 
 ## Code Architecture
 
-The plugin implements a workflow that:
+The plugin implements a simplified workflow that:
 
 1. **Discovers components** in specified directories
-2. **Resolves dependencies** using topological sort 
-3. **Bundles assets** in dependency order
-4. **Isolates JavaScript** with IIFEs to prevent global scope pollution
+2. **Validates requirements** using simple existence checking
+3. **Orders components** alphabetically within base/section groups
+4. **Processes CSS** with concatenation → temp copy → @import resolution → minification flow
+5. **Bundles assets** using esbuild.build() with plugin support
+6. **Isolates JavaScript** with IIFEs to prevent global scope pollution
+7. **Supports main entry points** for bundling application-wide CSS/JS
+8. **Resolves @import statements** automatically by copying dependencies to temp directory
+9. **Applies complete minification** to all CSS and JS (main + components) in production
+10. **Integrates PostCSS** via esbuild-plugin-postcss
 
 ### Key Functions
 
 - `collectComponents()` - Scans directories for components
 - `loadComponent()` - Reads component manifests or auto-generates them
 - `createComponentMap()` - Maps component names to objects
-- `validateDependencies()` - Ensures all dependencies exist
-- `resolveDependencyOrder()` - Implements topological sort with cycle detection
-- `bundleComponents()` - Concatenates CSS and JS files with proper wrapping
+- `validateRequirements()` - Ensures all required components exist
+- `bundleWithESBuild()` - Bundles CSS and JS using esbuild.build() with plugins
 
-### Core Algorithm: Dependency Resolution
+### Core Algorithm: Simplified Component Ordering
 
-The plugin uses depth-first search to order components based on their dependencies:
+The plugin uses a simplified approach that works because components are namespaced:
 
 ```javascript
-function resolveDependencyOrder(componentMap) {
-  const visited = new Set();
-  const visiting = new Set();
-  const order = [];
+// Simple alphabetical ordering within groups
+const sortedComponents = [
+  ...baseComponents.sort((a, b) => a.name.localeCompare(b.name)),
+  ...sectionComponents.sort((a, b) => a.name.localeCompare(b.name))
+];
 
-  function visit(name, path = []) {
-    if (visited.has(name)) return;
-    
-    if (visiting.has(name)) {
-      throw new Error(`Circular dependency: ${path.join(' → ')} → ${name}`);
-    }
-    
-    visiting.add(name);
-    const component = componentMap.get(name);
-    
-    // Visit dependencies first
-    component.dependencies.forEach(dependency => {
-      visit(dependency, [...path, name]);
+// Basic requirement validation (no complex dependency resolution)
+function validateRequirements(componentMap) {
+  const errors = [];
+  componentMap.forEach((component) => {
+    const requirements = component.requires || component.dependencies || [];
+    requirements.forEach(required => {
+      if (!componentMap.has(required)) {
+        errors.push(`Component "${component.name}" requires "${required}" which was not found`);
+      }
     });
-    
-    visiting.delete(name);
-    visited.add(name);
-    order.push(name);
-  }
-
-  componentMap.forEach((_, name) => visit(name));
-  return order;
+  });
+  return errors;
 }
 ```
 
@@ -191,16 +187,27 @@ Tests are organized as:
 
 Key test fixtures:
 
-1. **default** - Tests default behavior
+1. **default** - Tests default behavior with esbuild bundling
 2. **custom-paths** - Tests custom component paths
-3. **dependencies** - Tests dependency ordering
-4. **circular-deps** - Tests circular dependency detection
+3. **dependencies** - Tests requirement validation and ordering
+4. **postcss-integration** - Tests PostCSS integration with @import resolution
+5. **production-mode** - Tests minification functionality
+
+**Current test coverage: 97.76%**
+
+Key test areas:
+- **Integration tests** - PostCSS @import resolution, production minification
+- **Unit tests** - Component discovery, options validation, requirement validation
+- **Real-world scenarios** - Based on actual testbed project analysis
 
 When updating tests, ensure that:
 
-1. Changes to bundling logic include tests for ordering correctness
-2. New options have corresponding test cases
-3. Error cases are tested (especially circular dependency detection)
+1. Changes to bundling logic include tests for esbuild output format
+2. New options have corresponding test cases  
+3. Error cases are tested (especially requirement validation)
+4. PostCSS integration and @import resolution tests work correctly
+5. Complete minification is tested for both CSS and JS
+6. Test normalization handles comment variations from esbuild processing
 
 ## Plugin Conventions
 
@@ -210,6 +217,57 @@ This plugin follows Werner Glinka's Metalsmith plugin standards:
 - Standard options normalization pattern
 - Consistent error handling
 - Debug logging support
+
+## CRITICAL TESTING RULES
+
+### 1. NEVER mock Metalsmith instances
+
+**Always use real Metalsmith instances in tests:**
+
+```js
+// ✅ CORRECT - Real Metalsmith instance
+const metalsmith = Metalsmith(fixture('test-directory'));
+
+// ❌ WRONG - Never create mock objects
+const mockMetalsmith = { directory: () => '/fake/path' };
+```
+
+### 2. Use proper plugin function signature
+
+**Plugins receive (files, metalsmith, done) - pass files directly:**
+
+```js
+// ✅ CORRECT - Proper plugin usage
+function runPlugin(files, options = {}) {
+  return new Promise((resolve, reject) => {
+    const metalsmith = Metalsmith(fixture('validation'));
+    const plugin = bundledComponents(options);
+    
+    // Plugin receives files directly - this is the standard pattern
+    plugin(files, metalsmith, (error) => {
+      if (error) reject(error);
+      else resolve(files);
+    });
+  });
+}
+
+// ❌ WRONG - Don't add files to metadata
+Object.keys(files).forEach(filename => {
+  metalsmith.metadata()[filename] = files[filename]; // This is wrong!
+});
+```
+
+### 3. Understand files vs metadata
+
+- **`files`** - Individual page/content files processed by the plugin
+- **`metalsmith.metadata()`** - Site-wide configuration and global data
+- **Don't mix them** - Files go to the plugin function, metadata is for global config
+
+Real Metalsmith instances provide:
+- Proper API methods like `metalsmith.directory()`
+- Correct behavior and error handling  
+- Real-world testing scenarios
+- Future compatibility with Metalsmith updates
 
 ## Release Process
 

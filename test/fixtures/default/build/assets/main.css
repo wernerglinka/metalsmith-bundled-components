@@ -1,4 +1,34 @@
-/******* Component: button *******/
+/* base.css */
+.base-reset {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+.base-typography {
+  font-family: "Helvetica Neue", sans-serif;
+  line-height: 1.6;
+}
+
+/* main.css */
+body {
+  font-family:
+    "Helvetica Neue",
+    Helvetica,
+    Arial,
+    sans-serif;
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
 .button {
   display: inline-block;
   padding: 10px 20px;
@@ -8,12 +38,9 @@
   text-decoration: none;
   font-weight: bold;
 }
-
 .button:hover {
   background-color: #2980b9;
 }
-
-/******* Component: banner *******/
 .banner {
   display: flex;
   flex-direction: column;
@@ -24,12 +51,10 @@
   padding: 40px;
   text-align: center;
 }
-
 .banner__title {
   font-size: 36px;
   margin-bottom: 20px;
 }
-
 .banner__content {
   max-width: 600px;
   margin-bottom: 30px;

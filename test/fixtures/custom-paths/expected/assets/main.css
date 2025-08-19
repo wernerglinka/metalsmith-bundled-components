@@ -1,4 +1,7 @@
-/******* Component: button *******/
+body {
+  margin: 0;
+  padding: 0;
+}
 .button {
   display: inline-block;
   padding: 10px 20px;
@@ -8,12 +11,9 @@
   text-decoration: none;
   font-weight: bold;
 }
-
 .button:hover {
   background-color: #2980b9;
 }
-
-/******* Component: banner *******/
 .banner {
   display: flex;
   flex-direction: column;
@@ -24,12 +24,10 @@
   padding: 40px;
   text-align: center;
 }
-
 .banner__title {
   font-size: 36px;
   margin-bottom: 20px;
 }
-
 .banner__content {
   max-width: 600px;
   margin-bottom: 30px;

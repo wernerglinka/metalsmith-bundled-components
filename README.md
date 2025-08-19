@@ -1,6 +1,6 @@
 # metalsmith-bundled-components
 
-A Metalsmith plugin that automatically discovers, orders, and bundles CSS and JavaScript files from component-based architectures
+A Metalsmith plugin that automatically discovers and bundles CSS and JavaScript files from component-based architectures using esbuild
 
 [![metalsmith:plugin][metalsmith-badge]][metalsmith-url]
 [![npm: version][npm-badge]][npm-url]
@@ -15,11 +15,15 @@ A Metalsmith plugin that automatically discovers, orders, and bundles CSS and Ja
 ## Features
 
 - **Automatic component discovery** - Scans directories for components and their assets
-- **Dependency resolution** - Automatically orders components based on their dependencies
-- **Circular dependency detection** - Identifies and reports circular dependencies
-- **Asset bundling** - Concatenates CSS and JS files in the correct order
-- **JavaScript scope isolation** - Wraps JS in IIFEs to prevent global namespace pollution
-- **PostCSS integration** - Optional processing of CSS with PostCSS plugins
+- **Requirement validation** - Validates that component requirements exist (no complex dependency ordering)
+- **esbuild-powered bundling** - Modern, fast bundling with tree shaking and comprehensive minification
+- **CSS @import resolution** - Automatically resolves @import statements in main CSS files
+- **Complete minification** - All CSS and JS (main + components) properly minified in production
+- **Main entry points** - Bundle your main CSS/JS files alongside components
+- **PostCSS integration** - Seamless PostCSS support via esbuild plugins
+- **Simple, predictable ordering** - Main entries → base components → sections (alphabetical)
+- **Component validation** - Validates component properties to prevent silent failures
+- **Tree shaking** - Removes unused code for smaller bundles
 - **Convention over configuration** - Sensible defaults with minimal required setup
 - **ESM and CommonJS support**:
   - ESM: `import bundledComponents from 'metalsmith-bundled-components'`
@@ -60,6 +64,26 @@ Metalsmith(__dirname)
     sectionsPath: 'components/sections',
     cssDest: 'assets/bundle.css',
     jsDest: 'assets/bundle.js'
+  }))
+  .build((err) => {
+    if (err) throw err;
+  });
+```
+
+### With Main Entry Points (New!)
+
+```js
+import Metalsmith from 'metalsmith';
+import bundledComponents from 'metalsmith-bundled-components';
+
+Metalsmith(__dirname)
+  .use(bundledComponents({
+    // Bundle main app files along with components
+    mainCSSEntry: 'src/styles/main.css',
+    mainJSEntry: 'src/scripts/main.js',
+    // Component paths
+    basePath: 'components/base',
+    sectionsPath: 'components/sections'
   }))
   .build((err) => {
     if (err) throw err;
@@ -110,6 +134,9 @@ The resulting bundled CSS will be properly ordered by dependencies, prefixed for
 | `sectionsPath` | Path to section/composite components directory | `String` | `'lib/layouts/components/sections'` |
 | `cssDest` | Destination path for bundled CSS | `String` | `'assets/components.css'` |
 | `jsDest` | Destination path for bundled JavaScript | `String` | `'assets/components.js'` |
+| `mainCSSEntry` | Main CSS entry point (design tokens, base styles) | `String` | `null` |
+| `mainJSEntry` | Main JS entry point (app initialization code) | `String` | `null` |
+| `minifyOutput` | Enable esbuild minification for production builds | `Boolean` | `false` |
 | `postcss` | PostCSS configuration (enabled, plugins, options) | `Object` | `{ enabled: false, plugins: [], options: {} }` |
 | `validation` | Section validation configuration | `Object` | `{ enabled: true, strict: false, reportAllErrors: true }` |
 
@@ -156,13 +183,13 @@ Each component can include an optional `manifest.json` file:
   "description": "banner section with background image",
   "styles": ["banner.css", "banner-responsive.css"],
   "scripts": ["banner.js"],
-  "dependencies": ["button", "image"]
+  "requires": ["button", "image"]
 }
 ```
 
 If no manifest file is present, the plugin will auto-generate one based on the component name:
 - It will look for `<component-name>.css` and `<component-name>.js` files
-- Dependencies must be explicitly defined in a manifest file
+- Requirements must be explicitly defined in a manifest file if component depends on others
 
 ## Section Validation
 
@@ -184,7 +211,7 @@ Add a `validation` object to your component's `manifest.json`:
   "type": "section",
   "styles": ["hero.css"],
   "scripts": [],
-  "dependencies": ["button", "image"],
+  "requires": ["button", "image"],
   "validation": {
     "required": ["sectionType"],
     "properties": {
@@ -325,6 +352,67 @@ Metalsmith(__dirname)
   });
 ```
 
+## CSS Processing & @import Resolution
+
+The plugin provides sophisticated CSS processing with automatic @import resolution:
+
+### How CSS Processing Works
+
+1. **Concatenation**: Main CSS entry + all component CSS files are combined
+2. **Temp Directory Setup**: Combined CSS and @import dependencies copied to temporary directory
+3. **@import Resolution**: esbuild processes the combined CSS to resolve all @import statements
+4. **Minification**: When `minifyOutput: true`, all CSS (main + components) is minified together
+5. **Output**: Final processed CSS written to build directory
+6. **Cleanup**: Temporary files automatically cleaned up
+
+### @import Support
+
+Your main CSS file can use @import statements with the following supported directory structure:
+
+```css
+/* main.css */
+@import './styles/_design-tokens.css';
+@import './styles/_base.css';
+@import './_utilities.css';  /* Files in same directory */
+
+/* Your main application styles */
+body {
+  font-family: var(--font-primary);
+  line-height: var(--line-height);
+}
+```
+
+**Expected Directory Structure:**
+```
+src/assets/
+├── main.css              /* Main CSS entry point */
+├── _utilities.css         /* CSS files in same directory */
+└── styles/               /* Subdirectory for @imports */
+    ├── _design-tokens.css
+    ├── _base.css
+    └── _components.css
+```
+
+The plugin automatically:
+- ✅ **Copies imported files** to temp directory preserving relative paths
+- ✅ **Resolves @import statements** using esbuild bundling
+- ✅ **Combines with component CSS** for a single output file
+- ✅ **Applies minification** to the entire combined CSS when enabled
+
+### Production Minification
+
+When `minifyOutput: true` is set:
+
+```js
+Metalsmith(__dirname)
+  .use(bundledComponents({
+    mainCSSEntry: 'lib/assets/main.css',
+    minifyOutput: process.env.NODE_ENV === 'production' // Enable in production
+  }))
+```
+
+**Result**: All CSS (main entry + imported files + component styles) is fully minified into a single optimized file.
+
 ## Test Coverage
 
 This plugin is tested using mocha with c8 for code coverage.
@@ -380,6 +468,6 @@ All AI-assisted code has been reviewed and tested to ensure it meets project sta
 [metalsmith-url]: https://metalsmith.io
 [license-badge]: https://img.shields.io/github/license/wernerglinka/metalsmith-bundled-components
 [license-url]: LICENSE
-[coverage-badge]: https://img.shields.io/badge/test%20coverage-96%25-brightgreen
+[coverage-badge]: https://img.shields.io/badge/test%20coverage-97%25-brightgreen
 [coverage-url]: #test-coverage
 [modules-badge]: https://img.shields.io/badge/modules-ESM%2FCJS-blue

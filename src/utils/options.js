@@ -14,36 +14,46 @@
 
 /**
  * @typedef {Object} BundledComponentsOptions
- * @property {string} [basePath] - Path to base components directory (partials)
- * @property {string} [sectionsPath] - Path to sections components directory
- * @property {string} [cssDest] - Destination path for bundled CSS
- * @property {string} [jsDest] - Destination path for bundled JS
- * @property {PostCSSConfiguration} [postcss] - PostCSS configuration
- * @property {ValidationOptions} [validation] - Validation configuration
+ * @property {string} [basePath] - Path to base/partial components directory
+ * @property {string} [sectionsPath] - Path to section components directory
+ * @property {string} [cssDest] - Output path for bundled CSS file
+ * @property {string} [jsDest] - Output path for bundled JavaScript file
+ * @property {string} [mainCSSEntry] - Main CSS entry point (design tokens, base styles)
+ * @property {string} [mainJSEntry] - Main JavaScript entry point (app initialization)
+ * @property {boolean} [minifyOutput] - Enable esbuild minification for production
+ * @property {PostCSSConfiguration} [postcss] - PostCSS configuration via esbuild plugin
+ * @property {ValidationOptions} [validation] - Component property validation settings
  */
 
 /** @type {BundledComponentsOptions} */
 const defaults = {
-  basePath: 'lib/layouts/components/_partials',    // Path to partials
-  sectionsPath: 'lib/layouts/components/sections', // Path to sections
-  cssDest: 'assets/components.css',                // Where to put it in build
-  jsDest: 'assets/components.js',                  // Where to put it in build
+  basePath: 'lib/layouts/components/_partials',    // Base/partial components (buttons, cards, etc.)
+  sectionsPath: 'lib/layouts/components/sections', // Section components (hero, banner, etc.)
+  cssDest: 'assets/main.css',                      // Output path for bundled CSS (main + components)
+  jsDest: 'assets/main.js',                        // Output path for bundled JS (main + components)
+  mainCSSEntry: 'lib/assets/main.css',             // Main CSS entry (design tokens, base styles)
+  mainJSEntry: 'lib/assets/main.js',               // Main JS entry (app initialization)
+  minifyOutput: false,                             // Enable esbuild minification
   postcss: {
-    enabled: false,
-    plugins: [],
-    options: {}
+    enabled: false,                                // PostCSS via esbuild plugin
+    plugins: [],                                   // PostCSS plugins array
+    options: {}                                    // Additional PostCSS options
   },
   validation: {
-    enabled: true,           // Enable validation by default
-    strict: false,           // Don't fail build, just warn
-    reportAllErrors: true    // Report all errors, don't stop on first
+    enabled: true,                                 // Component property validation
+    strict: false,                                 // Warn vs fail on validation errors
+    reportAllErrors: true                          // Report all errors vs stop on first
   }
 };
 
 /**
- * Normalize plugin options
- * @param {BundledComponentsOptions} [options]
- * @returns {BundledComponentsOptions}
+ * Normalize and merge plugin options with defaults
+ * 
+ * Ensures all configuration objects have required properties and applies
+ * sensible defaults for the simplified esbuild-based architecture.
+ * 
+ * @param {BundledComponentsOptions} [options] - User-provided options
+ * @returns {BundledComponentsOptions} Normalized options with all defaults applied
  */
 function normalizeOptions( options ) {
   const normalized = Object.assign( {}, defaults, options || {} );

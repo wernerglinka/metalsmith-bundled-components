@@ -7,7 +7,8 @@ import path from 'path';
  * @property {string} [type] - Component type (e.g., 'auto', 'manual')
  * @property {string[]} styles - Array of CSS file names
  * @property {string[]} scripts - Array of JS file names
- * @property {string[]} dependencies - Array of component names this component depends on
+ * @property {string[]} dependencies - Array of component names this component depends on (legacy)
+ * @property {string[]} requires - Array of component names this component requires (new format)
  */
 
 /**
@@ -16,14 +17,20 @@ import path from 'path';
  * @property {string} [type] - Component type
  * @property {string[]} styles - Array of CSS file names
  * @property {string[]} scripts - Array of JS file names
- * @property {string[]} dependencies - Array of component names this component depends on
+ * @property {string[]} dependencies - Array of component names this component depends on (legacy)
+ * @property {string[]} requires - Array of component names this component requires (new format)
  * @property {string} path - Full path to component directory
  */
 
 /**
- * Collect components from a directory
- * @param {string} dirPath - Directory to scan
- * @returns {Array} Array of component objects
+ * Collect all components from a directory (base or sections)
+ * 
+ * Scans the provided directory for component subdirectories and loads
+ * their manifests or auto-generates them. Supports both explicit manifests
+ * and auto-discovery based on file patterns.
+ * 
+ * @param {string} dirPath - Directory to scan for components
+ * @returns {Array} Array of component objects with metadata and file paths
  */
 function collectComponents( dirPath ) {
   if ( !fs.existsSync( dirPath ) ) {
