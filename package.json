@@ -1,6 +1,6 @@
 {
   "name": "metalsmith-bundled-components",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "A Metalsmith plugin that discovers, orders, and bundles CSS and JavaScript files from component-based architectures using esbuild",
   "keywords": [
     "metalsmith",
