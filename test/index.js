@@ -200,4 +200,46 @@ describe( 'metalsmith-bundled-components', () => {
         done();
       } );
   } );
+
+  it( 'should bundle JavaScript files with ES module imports', ( done ) => {
+    const ms = Metalsmith( fixture( 'js-imports' ) )
+      .source( './src' )
+      .destination( './build' )
+      .clean( true )
+      .use(
+        bundledComponents( {
+          basePath: 'lib/layouts/components/_partials',
+          sectionsPath: 'lib/layouts/components/sections',
+          cssDest: 'assets/main.css',
+          jsDest: 'assets/main.js'
+        } )
+      );
+
+    ms.build( ( err ) => {
+      if ( err ) {return done( err );}
+      
+      const jsOutputPath = fixture( 'js-imports/build/assets/main.js' );
+      const cssOutputPath = fixture( 'js-imports/build/assets/main.css' );
+      
+      // Check that files were created
+      assert( existsSync( jsOutputPath ), 'JS bundle should be created' );
+      assert( existsSync( cssOutputPath ), 'CSS bundle should be created' );
+      
+      const jsContent = readFileSync( jsOutputPath, 'utf8' );
+      const cssContent = readFileSync( cssOutputPath, 'utf8' );
+      
+      // Check that JS content includes bundled code from imports
+      // The bundled output should contain the module code but in IIFE format
+      assert( jsContent.includes( 'Modal' ) || jsContent.includes( 'modal' ), 'JS should contain Modal component code' );
+      assert( jsContent.includes( 'Gallery' ) || jsContent.includes( 'gallery' ), 'JS should contain Gallery component code' );
+      assert( jsContent.includes( 'trapFocus' ) || jsContent.includes( 'trap' ), 'JS should contain imported utility functions' );
+      assert( jsContent.includes( 'preloadImage' ) || jsContent.includes( 'preload' ), 'JS should contain gallery utility functions' );
+      
+      // Check CSS content
+      assert( cssContent.includes( '.modal' ), 'CSS should contain modal styles' );
+      assert( cssContent.includes( '.gallery' ), 'CSS should contain gallery styles' );
+      
+      done();
+    } );
+  } );
 } );

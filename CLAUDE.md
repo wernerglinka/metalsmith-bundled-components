@@ -77,9 +77,6 @@ npm run test:coverage  # Run tests with detailed coverage
 ```
 
 
-
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 ## metalsmith-bundled-components
 
 This Metalsmith plugin automatically discovers and bundles CSS and JavaScript files from component-based architectures. It uses esbuild.build() with plugins for modern, fast bundling with tree shaking, PostCSS integration, CSS @import resolution, complete minification, and supports bundling main application entry points alongside components.

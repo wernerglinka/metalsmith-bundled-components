@@ -174,35 +174,46 @@ async function bundleWithESBuild( baseComponents, sectionComponents, projectRoot
       // tempDir already created above
       const tempJSEntry = path.join( tempDir, 'entry.js' );
       tempFiles.push( tempDir ); // Track temp directory for cleanup
-      const jsImports = Array.from( jsEntryPoints ) // Convert Set to array for processing
-        .filter( file => fs.existsSync( file ) )
-        .map( ( file, index ) => {
-          const fileContent = fs.readFileSync( file, 'utf8' );
-
-          // Check if this is the main entry file (first in array and matches mainJSEntry)
-          const isMainEntry = index === 0 && options.mainJSEntry &&
-            path.resolve( projectRoot, options.mainJSEntry ) === file;
-
-          if ( isMainEntry ) {
-            // Include main entry content directly without IIFE wrapper
-            return `// Main entry: ${ path.relative( projectRoot, file ) }
-              ${ fileContent }`;
-          }
-
-          // Wrap component scripts in IIFE for isolation
-          return `// Component ${ index }: ${ path.relative( projectRoot, file ) }
-            (() => {
-              ${ fileContent }
-            })();`;
-
-        } )
-        .join( '\n\n' );
-
-      // Skip if no valid JS content
-      if ( jsImports.trim().length === 0 ) {
+      
+      const jsEntryArray = Array.from( jsEntryPoints ).filter( file => fs.existsSync( file ) );
+      
+      // Check if we have any valid JS files
+      if ( jsEntryArray.length === 0 ) {
         jsContent = null;
       } else {
-        fs.writeFileSync( tempJSEntry, jsImports );
+        // Separate main entry from component files
+        let mainEntryFile = null;
+        const componentFiles = [];
+        
+        jsEntryArray.forEach( ( file, index ) => {
+          const isMainEntry = index === 0 && options.mainJSEntry &&
+            path.resolve( projectRoot, options.mainJSEntry ) === file;
+          
+          if ( isMainEntry ) {
+            mainEntryFile = file;
+          } else {
+            componentFiles.push( file );
+          }
+        } );
+        
+        // Create entry file content
+        let entryContent = '';
+        
+        // Import main entry if it exists
+        if ( mainEntryFile ) {
+          entryContent += `// Main entry: ${ path.relative( projectRoot, mainEntryFile ) }\n`;
+          entryContent += `import '${mainEntryFile}';\n\n`;
+        }
+        
+        // For component files, we need to maintain isolation
+        // Since ES modules are already isolated, we just import them
+        componentFiles.forEach( ( file, index ) => {
+          entryContent += `// Component ${ index }: ${ path.relative( projectRoot, file ) }\n`;
+          entryContent += `import '${file}';\n`;
+        } );
+        
+        // Write the entry file with import statements
+        fs.writeFileSync( tempJSEntry, entryContent );
         tempFiles.push( tempJSEntry ); // Track for cleanup later
 
         // Verify file was created
