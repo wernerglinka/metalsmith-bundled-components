@@ -16,11 +16,11 @@ A Metalsmith plugin that automatically discovers and bundles CSS and JavaScript 
 
 - **Automatic component discovery** - Scans directories for components and their assets
 - **Requirement validation** - Validates that component requirements exist (no complex dependency ordering)
-- **esbuild-powered bundling** - Modern, fast bundling with tree shaking and comprehensive minification
+- **esbuild-powered bundling** - Modern, fast bundling with tree shaking and minification
 - **CSS @import resolution** - Automatically resolves @import statements in main CSS files
 - **Complete minification** - All CSS and JS (main + components) properly minified in production
 - **Main entry points** - Bundle your main CSS/JS files alongside components
-- **PostCSS integration** - Seamless PostCSS support via esbuild plugins
+- **PostCSS integration** - PostCSS support via esbuild plugins
 - **Simple, predictable ordering** - Main entries → base components → sections (alphabetical)
 - **Component validation** - Validates component properties to prevent silent failures
 - **Tree shaking** - Removes unused code for smaller bundles
@@ -44,6 +44,10 @@ Pass `metalsmith-bundled-components` to `metalsmith.use`:
 ```js
 import Metalsmith from 'metalsmith';
 import bundledComponents from 'metalsmith-bundled-components';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 Metalsmith(__dirname)
   .use(bundledComponents()) // default options
@@ -57,14 +61,20 @@ Metalsmith(__dirname)
 ```js
 import Metalsmith from 'metalsmith';
 import bundledComponents from 'metalsmith-bundled-components';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 Metalsmith(__dirname)
-  .use(bundledComponents({
-    basePath: 'components/base',
-    sectionsPath: 'components/sections',
-    cssDest: 'assets/bundle.css',
-    jsDest: 'assets/bundle.js'
-  }))
+  .use(
+    bundledComponents({
+      basePath: 'components/base',
+      sectionsPath: 'components/sections',
+      cssDest: 'assets/bundle.css',
+      jsDest: 'assets/bundle.js'
+    })
+  )
   .build((err) => {
     if (err) throw err;
   });
@@ -75,16 +85,22 @@ Metalsmith(__dirname)
 ```js
 import Metalsmith from 'metalsmith';
 import bundledComponents from 'metalsmith-bundled-components';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 Metalsmith(__dirname)
-  .use(bundledComponents({
-    // Bundle main app files along with components
-    mainCSSEntry: 'src/styles/main.css',
-    mainJSEntry: 'src/scripts/main.js',
-    // Component paths
-    basePath: 'components/base',
-    sectionsPath: 'components/sections'
-  }))
+  .use(
+    bundledComponents({
+      // Bundle main app files along with components
+      mainCSSEntry: 'src/styles/main.css',
+      mainJSEntry: 'src/scripts/main.js',
+      // Component paths
+      basePath: 'components/base',
+      sectionsPath: 'components/sections'
+    })
+  )
   .build((err) => {
     if (err) throw err;
   });
@@ -97,28 +113,32 @@ import Metalsmith from 'metalsmith';
 import bundledComponents from 'metalsmith-bundled-components';
 import autoprefixer from 'autoprefixer';
 import cssnano from 'cssnano';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 Metalsmith(__dirname)
-  .use(bundledComponents({
-    basePath: 'lib/layouts/components/_partials',
-    sectionsPath: 'lib/layouts/components/sections',
-    postcss: {
-      enabled: true,
-      plugins: [
-        autoprefixer(),
-        cssnano({ preset: 'default' })
-      ],
-      options: {
-        // Additional PostCSS options if needed
+  .use(
+    bundledComponents({
+      basePath: 'lib/layouts/components/_partials',
+      sectionsPath: 'lib/layouts/components/sections',
+      postcss: {
+        enabled: true,
+        plugins: [autoprefixer(), cssnano({ preset: 'default' })],
+        options: {
+          // Additional PostCSS options if needed
+        }
       }
-    }
-  }))
+    })
+  )
   .build((err) => {
     if (err) throw err;
   });
 ```
 
 This configuration:
+
 1. Uses the default component paths in the `lib/layouts` directory structure
 2. Enables PostCSS processing
 3. Applies autoprefixer to add vendor prefixes for better browser compatibility
@@ -128,17 +148,17 @@ The resulting bundled CSS will be properly ordered by dependencies, prefixed for
 
 ### Options
 
-| Option | Description | Type | Default |
-|--------|-------------|------|---------|
-| `basePath` | Path to base/atomic components directory | `String` | `'lib/layouts/components/_partials'` |
-| `sectionsPath` | Path to section/composite components directory | `String` | `'lib/layouts/components/sections'` |
-| `cssDest` | Destination path for bundled CSS | `String` | `'assets/components.css'` |
-| `jsDest` | Destination path for bundled JavaScript | `String` | `'assets/components.js'` |
-| `mainCSSEntry` | Main CSS entry point (design tokens, base styles) | `String` | `null` |
-| `mainJSEntry` | Main JS entry point (app initialization code) | `String` | `null` |
-| `minifyOutput` | Enable esbuild minification for production builds | `Boolean` | `false` |
-| `postcss` | PostCSS configuration (enabled, plugins, options) | `Object` | `{ enabled: false, plugins: [], options: {} }` |
-| `validation` | Section validation configuration | `Object` | `{ enabled: true, strict: false, reportAllErrors: true }` |
+| Option         | Description                                       | Type      | Default                                                   |
+| -------------- | ------------------------------------------------- | --------- | --------------------------------------------------------- |
+| `basePath`     | Path to base/atomic components directory          | `String`  | `'lib/layouts/components/_partials'`                      |
+| `sectionsPath` | Path to section/composite components directory    | `String`  | `'lib/layouts/components/sections'`                       |
+| `cssDest`      | Destination path for bundled CSS                  | `String`  | `'assets/components.css'`                                 |
+| `jsDest`       | Destination path for bundled JavaScript           | `String`  | `'assets/components.js'`                                  |
+| `mainCSSEntry` | Main CSS entry point (design tokens, base styles) | `String`  | `null`                                                    |
+| `mainJSEntry`  | Main JS entry point (app initialization code)     | `String`  | `null`                                                    |
+| `minifyOutput` | Enable esbuild minification for production builds | `Boolean` | `false`                                                   |
+| `postcss`      | PostCSS configuration (enabled, plugins, options) | `Object`  | `{ enabled: false, plugins: [], options: {} }`            |
+| `validation`   | Section validation configuration                  | `Object`  | `{ enabled: true, strict: false, reportAllErrors: true }` |
 
 ## Component Structure
 
@@ -188,12 +208,13 @@ Each component can include an optional `manifest.json` file:
 ```
 
 If no manifest file is present, the plugin will auto-generate one based on the component name:
+
 - It will look for `<component-name>.css` and `<component-name>.js` files
 - Requirements must be explicitly defined in a manifest file if component depends on others
 
 ## Section Validation
 
-The plugin includes powerful validation capabilities to catch common configuration errors in your frontmatter/YAML that would otherwise result in "silent failures" - where the site builds successfully but renders incorrectly.
+The plugin includes validation capabilities to catch common configuration errors in your frontmatter/YAML that would otherwise result in "silent failures" - where the site builds successfully but renders incorrectly.
 
 ### Common Problems Solved
 
@@ -201,7 +222,7 @@ The plugin includes powerful validation capabilities to catch common configurati
 - **Invalid enum values**: `buttonStyle: "blue"` when CSS only supports `primary`, `secondary`, `ghost`
 - **Misspelled properties**: `titleTag: "header"` instead of valid HTML heading tags
 
-### Enhanced Manifest with Validation Rules
+### Manifest with Validation Rules
 
 Add a `validation` object to your component's `manifest.json`:
 
@@ -262,7 +283,7 @@ Add a `validation` object to your component's `manifest.json`:
 
 **Array Items**: Validate properties within array elements.
 
-**Helpful Error Messages**: Get actionable error messages with file context and helpful tips.
+**Helpful Error Messages**: Get error messages with file context and helpful tips.
 
 ### Error Message Example
 
@@ -283,24 +304,19 @@ Configure validation behavior in plugin options:
 
 ```js
 Metalsmith(__dirname)
-  .use(bundledComponents({
-    validation: {
-      enabled: true,           // Enable/disable validation
-      strict: false,           // Fail build on errors vs warnings only
-      reportAllErrors: true    // Report all errors vs stop on first
-    }
-  }))
+  .use(
+    bundledComponents({
+      validation: {
+        enabled: true, // Enable/disable validation
+        strict: false, // Fail build on errors vs warnings only
+        reportAllErrors: true // Report all errors vs stop on first
+      }
+    })
+  )
   .build((err) => {
     if (err) throw err;
   });
 ```
-
-### Backward Compatibility
-
-- Validation is **completely optional** - components without validation rules work unchanged
-- Existing projects continue building without any modifications
-- Add validation rules gradually as you update components
-- No performance impact when validation is disabled
 
 ## Additional PostCSS Examples
 
@@ -312,18 +328,20 @@ import bundledComponents from 'metalsmith-bundled-components';
 import autoprefixer from 'autoprefixer';
 import cssnano from 'cssnano';
 import postcssCustomMedia from 'postcss-custom-media';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 Metalsmith(__dirname)
-  .use(bundledComponents({
-    postcss: {
-      enabled: true,
-      plugins: [
-        postcssCustomMedia(),
-        autoprefixer(),
-        cssnano({ preset: 'default' })
-      ]
-    }
-  }))
+  .use(
+    bundledComponents({
+      postcss: {
+        enabled: true,
+        plugins: [postcssCustomMedia(), autoprefixer(), cssnano({ preset: 'default' })]
+      }
+    })
+  )
   .build((err) => {
     if (err) throw err;
   });
@@ -336,17 +354,20 @@ import Metalsmith from 'metalsmith';
 import bundledComponents from 'metalsmith-bundled-components';
 import postcssNested from 'postcss-nested';
 import autoprefixer from 'autoprefixer';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 Metalsmith(__dirname)
-  .use(bundledComponents({
-    postcss: {
-      enabled: true,
-      plugins: [
-        postcssNested(),
-        autoprefixer()
-      ]
-    }
-  }))
+  .use(
+    bundledComponents({
+      postcss: {
+        enabled: true,
+        plugins: [postcssNested(), autoprefixer()]
+      }
+    })
+  )
   .build((err) => {
     if (err) throw err;
   });
@@ -354,7 +375,7 @@ Metalsmith(__dirname)
 
 ## CSS Processing & @import Resolution
 
-The plugin provides sophisticated CSS processing with automatic @import resolution:
+The plugin provides CSS processing with automatic @import resolution:
 
 ### How CSS Processing Works
 
@@ -373,7 +394,7 @@ Your main CSS file can use @import statements with the following supported direc
 /* main.css */
 @import './styles/_design-tokens.css';
 @import './styles/_base.css';
-@import './_utilities.css';  /* Files in same directory */
+@import './_utilities.css'; /* Files in same directory */
 
 /* Your main application styles */
 body {
@@ -383,17 +404,19 @@ body {
 ```
 
 **Expected Directory Structure:**
+
 ```
 src/assets/
-├── main.css              /* Main CSS entry point */
+├── main.css               /* Main CSS entry point */
 ├── _utilities.css         /* CSS files in same directory */
-└── styles/               /* Subdirectory for @imports */
+└── styles/                /* Subdirectory for @imports */
     ├── _design-tokens.css
     ├── _base.css
     └── _components.css
 ```
 
 The plugin automatically:
+
 - ✅ **Copies imported files** to temp directory preserving relative paths
 - ✅ **Resolves @import statements** using esbuild bundling
 - ✅ **Combines with component CSS** for a single output file
@@ -404,11 +427,12 @@ The plugin automatically:
 When `minifyOutput: true` is set:
 
 ```js
-Metalsmith(__dirname)
-  .use(bundledComponents({
+Metalsmith(__dirname).use(
+  bundledComponents({
     mainCSSEntry: 'lib/assets/main.css',
     minifyOutput: process.env.NODE_ENV === 'production' // Enable in production
-  }))
+  })
+);
 ```
 
 **Result**: All CSS (main entry + imported files + component styles) is fully minified into a single optimized file.
@@ -422,7 +446,7 @@ This plugin is tested using mocha with c8 for code coverage.
 To enable debug logs, set the `DEBUG` environment variable to `metalsmith-bundled-components*`:
 
 ```js
-metalsmith.env('DEBUG', 'metalsmith-bundled-components*')
+metalsmith.env('DEBUG', 'metalsmith-bundled-components*');
 ```
 
 Alternatively, you can set `DEBUG` to `metalsmith:*` to debug all Metalsmith plugins.
@@ -454,13 +478,13 @@ MIT
 
 ## Development transparency
 
-Portions of this project were developed with the assistance of AI tools including Claude and Augment Code. These tools were used to:
+Portions of this project were developed with the assistance of AI tools including Claude and Claude Code. These tools were used to:
+
 - Generate or refactor code
 - Assist with documentation
 - Troubleshoot bugs and explore alternative approaches
 
 All AI-assisted code has been reviewed and tested to ensure it meets project standards. See the included [CLAUDE.md](CLAUDE.md) and [PROMPT-TEMPLATE.md](PROMPT-TEMPLATE.md) files for more details.
-
 
 [npm-badge]: https://img.shields.io/npm/v/metalsmith-bundled-components.svg
 [npm-url]: https://www.npmjs.com/package/metalsmith-bundled-components
