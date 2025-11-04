@@ -242,4 +242,50 @@ describe( 'metalsmith-bundled-components', () => {
       done();
     } );
   } );
+
+  it( 'should only bundle components used in templates (template analysis)', ( done ) => {
+    const ms = Metalsmith( fixture( 'template-analysis' ) )
+      .source( './src' )
+      .destination( './build' )
+      .clean( true )
+      .use(
+        bundledComponents( {
+          basePath: 'lib/layouts/components/_partials',
+          sectionsPath: 'lib/layouts/components/sections',
+          cssDest: 'assets/main.css',
+          jsDest: 'assets/main.js'
+        } )
+      );
+
+    ms.build( ( err ) => {
+      if ( err ) {return done( err );}
+
+      const jsOutputPath = fixture( 'template-analysis/build/assets/main.js' );
+      const cssOutputPath = fixture( 'template-analysis/build/assets/main.css' );
+
+      // Check that files were created
+      assert( existsSync( jsOutputPath ), 'JS bundle should be created' );
+      assert( existsSync( cssOutputPath ), 'CSS bundle should be created' );
+
+      const jsContent = readFileSync( jsOutputPath, 'utf8' );
+      const cssContent = readFileSync( cssOutputPath, 'utf8' );
+
+      // Should include components used in template: hero, button, icon
+      assert( jsContent.includes( 'hero' ), 'JS should contain hero component' );
+      assert( jsContent.includes( 'button' ), 'JS should contain button component (required by hero)' );
+      assert( jsContent.includes( 'icon' ), 'JS should contain icon component (required by button)' );
+
+      assert( cssContent.includes( '.hero' ), 'CSS should contain hero styles' );
+      assert( cssContent.includes( '.button' ), 'CSS should contain button styles' );
+      assert( cssContent.includes( '.icon' ), 'CSS should contain icon styles' );
+
+      // Should NOT include unused components
+      assert( !jsContent.includes( 'unused-partial' ), 'JS should NOT contain unused-partial component' );
+      assert( !jsContent.includes( 'unused-section' ), 'JS should NOT contain unused-section component' );
+      assert( !cssContent.includes( '.unused-partial' ), 'CSS should NOT contain unused-partial styles' );
+      assert( !cssContent.includes( '.unused-section' ), 'CSS should NOT contain unused-section styles' );
+
+      done();
+    } );
+  } );
 } );

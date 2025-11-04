@@ -16,6 +16,7 @@
  * @typedef {Object} BundledComponentsOptions
  * @property {string} [basePath] - Path to base/partial components directory
  * @property {string} [sectionsPath] - Path to section components directory
+ * @property {string} [layoutsPath] - Path to layouts directory for scanning template includes
  * @property {string} [cssDest] - Output path for bundled CSS file
  * @property {string} [jsDest] - Output path for bundled JavaScript file
  * @property {string} [mainCSSEntry] - Main CSS entry point (design tokens, base styles)
@@ -29,6 +30,7 @@
 const defaults = {
   basePath: 'lib/layouts/components/_partials',    // Base/partial components (buttons, cards, etc.)
   sectionsPath: 'lib/layouts/components/sections', // Section components (hero, banner, etc.)
+  layoutsPath: 'lib/layouts',                      // Layouts directory for scanning includes
   cssDest: 'assets/main.css',                      // Output path for bundled CSS (main + components)
   jsDest: 'assets/main.js',                        // Output path for bundled JS (main + components)
   mainCSSEntry: 'lib/assets/main.css',             // Main CSS entry (design tokens, base styles)

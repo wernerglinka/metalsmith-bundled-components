@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Template Analysis Test</title>
+</head>
+<body>
+  {# This template only imports hero from sections #}
+  {% from "components/sections/hero/hero.njk" import hero %}
+
+  {# Hero requires button, and button requires icon #}
+  {# So we should get: hero, button, icon #}
+  {# But NOT: unused-partial, unused-section #}
+
+  <h1>Template Analysis Test</h1>
+</body>
+</html>

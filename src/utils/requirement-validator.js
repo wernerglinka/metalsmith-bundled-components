@@ -1,9 +1,9 @@
 /**
  * Simple requirement validation for component dependencies
- * 
- * Replaces complex dependency resolution with basic existence checking.
- * Components are namespaced, so ordering is handled by simple alphabetical sorting.
- * This validates that components marked as 'requires' or 'dependencies' exist.
+ *
+ * Validates that components marked as 'requires' or 'dependencies' exist.
+ * Components are namespaced (CSS) and wrapped in IIFEs (JS), so load order
+ * doesn't affect functionality - only existence matters.
  */
 
 /**

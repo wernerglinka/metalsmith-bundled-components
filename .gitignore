@@ -35,3 +35,6 @@ Thumbs.db
 # Test outputs
 test/**/build/
 **/.claude/settings.local.json
+
+# Dev notes
+DEV-NOTES/

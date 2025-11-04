@@ -65,9 +65,9 @@ npm run lint                                              # Lint and fix code
 
 **Release Process:**
 ```bash
-npm run release:patch   # Bug fixes (1.5.4 → 1.5.5)
-npm run release:minor   # New features (1.5.4 → 1.6.0)  
-npm run release:major   # Breaking changes (1.5.4 → 2.0.0)
+npm run release:patch   # Bug fixes (1.2.3 → 1.2.4)
+npm run release:minor   # New features (1.2.3 → 1.3.0)
+npm run release:major   # Breaking changes (1.2.3 → 2.0.0)
 ```
 
 **Development:**
@@ -80,6 +80,10 @@ npm run test:coverage  # Run tests with detailed coverage
 ## metalsmith-bundled-components
 
 This Metalsmith plugin automatically discovers and bundles CSS and JavaScript files from component-based architectures. It uses esbuild.build() with plugins for modern, fast bundling with tree shaking, PostCSS integration, CSS @import resolution, complete minification, and supports bundling main application entry points alongside components.
+
+**Node Version:** This plugin requires Node.js >= 18.0.0 (see `.nvmrc` for recommended version)
+
+**Standards:** This plugin follows [Werner Glinka's Metalsmith Plugin Standards](../CLAUDE.md) for code quality, testing, and release processes.
 
 ## Key Commands
 
@@ -126,36 +130,71 @@ npm run release
 
 ## Code Architecture
 
-The plugin implements a simplified workflow that:
+The plugin implements an intelligent workflow that optimizes bundle sizes through template analysis:
 
-1. **Discovers components** in specified directories
-2. **Validates requirements** using simple existence checking
-3. **Orders components** alphabetically within base/section groups
-4. **Processes CSS** with concatenation → temp copy → @import resolution → minification flow
-5. **Bundles assets** using esbuild.build() with plugin support
-6. **Isolates JavaScript** with IIFEs to prevent global scope pollution
-7. **Supports main entry points** for bundling application-wide CSS/JS
-8. **Resolves @import statements** automatically by copying dependencies to temp directory
-9. **Applies complete minification** to all CSS and JS (main + components) in production
-10. **Integrates PostCSS** via esbuild-plugin-postcss
+1. **Detects used components** from page frontmatter `sections` arrays
+2. **Resolves transitive dependencies** via component `requires` arrays
+3. **Filters components** to only bundle what's actually needed
+4. **Validates requirements** ensuring all dependencies exist
+5. **Orders components** in filesystem discovery order within base/section groups
+6. **Processes CSS** with concatenation → temp copy → @import resolution → minification flow
+7. **Bundles assets** using esbuild.build() with plugin support
+8. **Isolates JavaScript** with IIFEs to prevent global scope pollution
+9. **Supports main entry points** for bundling application-wide CSS/JS
+10. **Resolves @import statements** automatically by copying dependencies to temp directory
+11. **Applies complete minification** to all CSS and JS (main + components) in production
+12. **Integrates PostCSS** via esbuild-plugin-postcss
+
+### Automatic Tree-Shaking via Template Analysis
+
+The plugin automatically analyzes your pages to determine which components are actually used, resulting in optimal bundle sizes:
+
+**How it works:**
+1. Scans page frontmatter for `sections` arrays containing `sectionType` declarations
+2. Follows component dependency chains via `requires` arrays in manifests
+3. Only bundles components that are used (directly or transitively)
+
+**Example:**
+```yaml
+---
+sections:
+  - sectionType: hero
+    text:
+      title: "Welcome"
+---
+```
+
+If `hero` requires `["button", "image"]` and `button` requires `["icon"]`, the bundler automatically includes: `hero`, `button`, `image`, and `icon` - nothing more.
 
 ### Key Functions
 
+- `detectUsedComponents()` - Analyzes templates to find components in use
+- `resolveAllDependencies()` - Follows dependency chains transitively
+- `filterNeededComponents()` - Removes unused components from bundle
 - `collectComponents()` - Scans directories for components
 - `loadComponent()` - Reads component manifests or auto-generates them
 - `createComponentMap()` - Maps component names to objects
 - `validateRequirements()` - Ensures all required components exist
 - `bundleWithESBuild()` - Bundles CSS and JS using esbuild.build() with plugins
 
+### Production Mode Minification
+
+The plugin automatically minifies all CSS and JavaScript in production mode:
+
+- CSS minification includes removing whitespace, comments, and optimizing selectors
+- JavaScript minification includes removing whitespace, shortening variable names, and tree shaking
+- Both main entry points and component bundles are minified
+- Controlled via `metalsmith.metadata().env` or `options.env` (default: 'development')
+
 ### Core Algorithm: Simplified Component Ordering
 
 The plugin uses a simplified approach that works because components are namespaced:
 
 ```javascript
-// Simple alphabetical ordering within groups
+// Simple filesystem discovery order within groups
 const sortedComponents = [
-  ...baseComponents.sort((a, b) => a.name.localeCompare(b.name)),
-  ...sectionComponents.sort((a, b) => a.name.localeCompare(b.name))
+  ...baseComponents,
+  ...sectionComponents
 ];
 
 // Basic requirement validation (no complex dependency resolution)
@@ -189,8 +228,6 @@ Key test fixtures:
 3. **dependencies** - Tests requirement validation and ordering
 4. **postcss-integration** - Tests PostCSS integration with @import resolution
 5. **production-mode** - Tests minification functionality
-
-**Current test coverage: 97.76%**
 
 Key test areas:
 - **Integration tests** - PostCSS @import resolution, production minification
@@ -268,11 +305,20 @@ Real Metalsmith instances provide:
 
 ## Release Process
 
-1. Update version in package.json
-2. Run tests and linting checks
-3. Generate a changelog
-4. Build the project
-5. Create a new GitHub release
-6. Publish to npm
+This plugin uses the automated release process with GitHub CLI integration. The process is fully automated and handles:
 
-The `release` script handles most of this process automatically.
+- Quality checks (ESLint and all tests)
+- Version management (package.json and git tags)
+- Changelog generation (from commit messages)
+- GitHub release creation (automated via GitHub CLI)
+- Git operations (pushes commits and tags)
+
+Simply run the appropriate release command:
+
+```bash
+npm run release:patch   # Bug fixes, docs, refactoring
+npm run release:minor   # New features, backwards-compatible changes
+npm run release:major   # Breaking changes, major rewrites
+```
+
+For detailed release process documentation, see the [Metalsmith Plugin Standards](../CLAUDE.md#automated-release-process).

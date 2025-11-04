@@ -21,7 +21,7 @@ A Metalsmith plugin that automatically discovers and bundles CSS and JavaScript 
 - **Complete minification** - All CSS and JS (main + components) properly minified in production
 - **Main entry points** - Bundle your main CSS/JS files alongside components
 - **PostCSS integration** - PostCSS support via esbuild plugins
-- **Simple, predictable ordering** - Main entries → base components → sections (alphabetical)
+- **Simple, predictable ordering** - Main entries → base components → sections (filesystem order)
 - **Component validation** - Validates component properties to prevent silent failures
 - **Tree shaking** - Removes unused code for smaller bundles
 - **Convention over configuration** - Sensible defaults with minimal required setup
@@ -148,17 +148,18 @@ The resulting bundled CSS will be properly ordered by dependencies, prefixed for
 
 ### Options
 
-| Option         | Description                                       | Type      | Default                                                   |
-| -------------- | ------------------------------------------------- | --------- | --------------------------------------------------------- |
-| `basePath`     | Path to base/atomic components directory          | `String`  | `'lib/layouts/components/_partials'`                      |
-| `sectionsPath` | Path to section/composite components directory    | `String`  | `'lib/layouts/components/sections'`                       |
-| `cssDest`      | Destination path for bundled CSS                  | `String`  | `'assets/components.css'`                                 |
-| `jsDest`       | Destination path for bundled JavaScript           | `String`  | `'assets/components.js'`                                  |
-| `mainCSSEntry` | Main CSS entry point (design tokens, base styles) | `String`  | `null`                                                    |
-| `mainJSEntry`  | Main JS entry point (app initialization code)     | `String`  | `null`                                                    |
-| `minifyOutput` | Enable esbuild minification for production builds | `Boolean` | `false`                                                   |
-| `postcss`      | PostCSS configuration (enabled, plugins, options) | `Object`  | `{ enabled: false, plugins: [], options: {} }`            |
-| `validation`   | Section validation configuration                  | `Object`  | `{ enabled: true, strict: false, reportAllErrors: true }` |
+| Option         | Description                                              | Type      | Default                                                   |
+| -------------- | -------------------------------------------------------- | --------- | --------------------------------------------------------- |
+| `basePath`     | Path to base/atomic components directory                 | `String`  | `'lib/layouts/components/_partials'`                      |
+| `sectionsPath` | Path to section/composite components directory           | `String`  | `'lib/layouts/components/sections'`                       |
+| `layoutsPath`  | Path to layouts directory for scanning template includes | `String`  | `'lib/layouts'`                                           |
+| `cssDest`      | Destination path for bundled CSS                         | `String`  | `'assets/main.css'`                                       |
+| `jsDest`       | Destination path for bundled JavaScript                  | `String`  | `'assets/main.js'`                                        |
+| `mainCSSEntry` | Main CSS entry point (design tokens, base styles)        | `String`  | `'lib/assets/main.css'`                                   |
+| `mainJSEntry`  | Main JS entry point (app initialization code)            | `String`  | `'lib/assets/main.js'`                                    |
+| `minifyOutput` | Enable esbuild minification for production builds        | `Boolean` | `false`                                                   |
+| `postcss`      | PostCSS configuration (enabled, plugins, options)        | `Object`  | `{ enabled: false, plugins: [], options: {} }`            |
+| `validation`   | Section validation configuration                         | `Object`  | `{ enabled: true, strict: false, reportAllErrors: true }` |
 
 ## Component Structure
 

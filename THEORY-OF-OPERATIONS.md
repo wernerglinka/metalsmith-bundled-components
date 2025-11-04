@@ -68,11 +68,65 @@ Each component can include an optional `manifest.json` file:
 
 ### Processing Pipeline
 
-#### 1. Component Discovery
-The plugin scans two directories:
+#### 1. Template Analysis (Automatic Tree-Shaking)
 
-- `_partials/` - For atomic components (buttons, images, etc.)
-- `sections/` - For composite components (banner, media sections, etc.)
+The plugin analyzes page templates to detect which components are actually used:
+
+**Detection Methods:**
+1. **Frontmatter sections arrays** (primary method) - Reads `sectionType` from page metadata
+2. **Layout file scanning** - Parses `{% include "..." %}` and `{% from "..." import ... %}` in layout templates
+3. **Nunjucks import statements** - Parses `{% from "..." import ... %}` statements in page templates
+
+**Example page frontmatter:**
+```yaml
+---
+sections:
+  - sectionType: hero
+    text:
+      title: "Welcome"
+  - sectionType: banner
+    background:
+      image: "/hero.jpg"
+---
+```
+
+From this frontmatter, the plugin detects: `["hero", "banner"]`
+
+**Example layout file:**
+```nunjucks
+{% from "components/_partials/breadcrumbs/breadcrumbs.njk" import breadcrumbs %}
+{% include "components/sections/header/header.njk" %}
+{% include "components/sections/footer/footer.njk" %}
+```
+
+From this layout file, the plugin detects: `["breadcrumbs", "header", "footer"]`
+
+The plugin scans both page templates AND layout files (in `lib/layouts/`) to ensure all components are detected, including those hardcoded in base layouts.
+
+#### 2. Transitive Dependency Resolution
+
+Once directly-used components are identified, the plugin follows dependency chains:
+
+**Process:**
+1. Start with components declared in page frontmatter
+2. For each component, read its `requires` array from manifest.json
+3. Recursively resolve all transitive dependencies
+4. De-duplicate (using Set) to ensure each component appears once
+
+**Example:**
+- Page uses: `hero`
+- `hero` requires: `["button", "image"]`
+- `button` requires: `["icon"]`
+- **Final bundle includes**: `hero`, `button`, `image`, `icon`
+
+This ensures optimal bundle sizes - only components actually needed are included.
+
+#### 3. Component Discovery
+
+The plugin scans two directories for available components:
+
+- `_partials/` - Atomic components (buttons, images, icons, etc.)
+- `sections/` - Composite components (hero, banner, media sections, etc.)
 
 For each subdirectory found, it:
 
@@ -80,24 +134,29 @@ For each subdirectory found, it:
 - Falls back to auto-discovery if no manifest exists
 - Validates the component structure
 
-#### 2. Requirement Validation
+**After template analysis, only needed components are processed for bundling.**
 
-Components can declare requirements for other components. The plugin:
+#### 4. Requirement Validation
 
-- Validates that all required components exist
+The plugin validates that all component dependencies exist:
+
+- Checks that all components in `requires` arrays are available
 - Supports both 'requires' (new format) and 'dependencies' (legacy) properties
 - Reports missing requirements as errors
 - Uses simple alphabetical ordering within component groups
 
-Since components are namespaced to avoid specificity conflicts, complex dependency ordering is not needed. The important thing is that general CSS (design tokens, base styles) loads first via the main entry point.
-#### 3. Asset Bundling with esbuild
+Since components are namespaced (CSS) and wrapped in IIFEs (JS), load order doesn't affect functionality. Alphabetical ordering provides predictable, consistent builds.
+
+#### 5. Asset Bundling with esbuild
 
 The plugin uses esbuild.build() with plugins for modern, optimized asset processing:
 
 **Build Order:**
 - Main CSS/JS entry points first (if specified)
-- Base components (alphabetical order)
-- Section components (alphabetical order)
+- Base components that are needed (filesystem discovery order)
+- Section components that are needed (filesystem discovery order)
+
+**Note**: Only components detected via template analysis are included in the bundle.
 
 **For CSS:**
 
@@ -128,34 +187,71 @@ The bundled assets are added to the Metalsmith files object:
 These files are then written to the build directory by Metalsmith.
 
 ### Key Algorithms
+
+#### Template Analysis and Tree-Shaking
+
+The plugin uses intelligent analysis to minimize bundle sizes:
+
+1. **Template scanning** - Parse page frontmatter for `sections` arrays with `sectionType` properties
+2. **Dependency resolution** - Breadth-first traversal of `requires` arrays to find all transitive dependencies
+3. **De-duplication** - Use Set data structure to ensure each component appears once
+4. **Filtering** - Remove components not detected in template analysis from the bundle
+
+**Algorithm (Breadth-First Dependency Resolution):**
+```javascript
+function resolveAllDependencies(usedComponents, componentMap) {
+  const resolved = new Set(usedComponents);  // Start with directly-used components
+  const queue = [...usedComponents];          // Queue for BFS
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    const component = componentMap.get(current);
+    const requires = component.requires || [];
+
+    requires.forEach(dep => {
+      if (!resolved.has(dep)) {  // Only process if not already resolved
+        resolved.add(dep);        // Add to result set
+        queue.push(dep);          // Add to queue for processing
+      }
+    });
+  }
+
+  return resolved;  // All components needed (direct + transitive)
+}
+```
+
+This ensures optimal bundle sizes - a page using only "hero" won't include unused "footer", "banner", or other components.
+
 #### Simplified Component Ordering
 
-The plugin uses a simplified ordering approach:
+After filtering to needed components only, components are processed in filesystem discovery order:
 
 1. **Main entries first** - Process main CSS/JS files if specified
-2. **Base components** - Sort alphabetically and process 
-3. **Section components** - Sort alphabetically and process
+2. **Base components** - Process only needed ones (in discovery order)
+3. **Section components** - Process only needed ones (in discovery order)
 
 This approach works because:
-- Components are namespaced to avoid CSS specificity conflicts
-- General styles (design tokens) load via main entry points
-- Alphabetical ordering within groups provides predictable results
+- Components are namespaced (CSS) to avoid specificity conflicts
+- Components are wrapped in IIFEs (JS) for scope isolation
+- Load order doesn't affect functionality
+- Filesystem order provides consistent builds on the same system
 
 #### Requirement Validation
 
-Simple existence checking replaces complex dependency resolution:
+Simple existence checking ensures all dependencies are available:
 
 1. For each component, check its 'requires' or 'dependencies' array
 2. Validate that each required component exists in the component map
 3. Report missing requirements as errors
 
-No circular dependency detection is needed since we don't enforce loading order based on requirements.
+Circular dependency detection is not needed since load order doesn't affect functionality.
 
 ### Configuration Options
 ```javascript
 {
   basePath: 'lib/layouts/components/_partials',  // Where to find base components
   sectionsPath: 'lib/layouts/components/sections', // Where to find section components
+  layoutsPath: 'lib/layouts',                    // Where to find layout templates for scanning
   cssDest: 'assets/components.css',              // Output path for CSS
   jsDest: 'assets/components.js',                // Output path for JS
   mainCSSEntry: 'src/styles/main.css',           // Main CSS entry point (optional)
@@ -175,13 +271,16 @@ No circular dependency detection is needed since we don't enforce loading order 
 ```
 ### Benefits
 
+- **Automatic Tree-Shaking** - Analyzes templates to bundle only used components
+- **Optimal Bundle Sizes** - Transitive dependency resolution ensures minimal output
+- **Zero Configuration** - Works automatically based on page frontmatter
 - **Automatic Discovery** - No need to manually maintain import lists
-- **Predictable Ordering** - Simple, alphabetical ordering within component groups
+- **Simple Ordering** - Filesystem discovery order within component groups
 - **Modern Bundling** - esbuild provides fast, optimized output with plugin support
 - **CSS @import Resolution** - Automatically resolves @import statements in main CSS files
 - **Complete Minification** - All CSS and JS (main + components) properly minified together
 - **PostCSS Integration** - Seamless PostCSS processing via esbuild plugins
-- **Tree Shaking** - Removes unused code for smaller bundles
+- **JavaScript Tree Shaking** - esbuild removes unused code for smaller bundles
 - **Scope Isolation** - JavaScript is wrapped in IIFEs to prevent conflicts
 - **Main Entry Points** - Combine application code with component bundles
 - **Source Preservation** - Original files remain untouched, only build output is processed
@@ -203,7 +302,7 @@ The plugin uses `esbuild.build()` with plugins for modern asset processing:
 
 1. **Component discovery** - Find all components in configured directories
 2. **Requirement validation** - Validate that required components exist
-3. **Simple ordering** - Alphabetical sorting within base/section groups
+3. **Simple ordering** - Filesystem discovery order within base/section groups
 4. **CSS processing** - Concatenate all CSS, copy to temp directory, resolve @imports and minify with esbuild.build()
 5. **JS bundling** - Create temporary entry and bundle with tree shaking
 6. **Output generation** - Write final bundles to Metalsmith files object
@@ -227,4 +326,4 @@ The plugin validates:
 - Referenced CSS/JS files actually exist
 - Component properties match validation schemas (if enabled)
 
-Errors are reported with clear messages to aid debugging. Complex circular dependency detection was removed in favor of simpler requirement validation.
+Errors are reported with clear messages to aid debugging.
