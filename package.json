@@ -49,7 +49,7 @@
   },
   "homepage": "https://github.com/wernerglinka/metalsmith-bundled-components#readme",
   "dependencies": {
-    "esbuild": "^0.25.9",
+    "esbuild": "^0.25.10",
     "esbuild-plugin-postcss": "^0.3.0",
     "postcss": "^8.5.6"
   },
