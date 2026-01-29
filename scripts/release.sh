@@ -29,7 +29,10 @@ fi
 
 echo "🚀 Starting $RELEASE_TYPE release..."
 
-# Set the GitHub token securely
+# Clear any existing GITHUB_TOKEN that might interfere with gh CLI authentication
+unset GITHUB_TOKEN
+
+# Set the GitHub token securely from gh CLI keyring
 export GH_TOKEN=$(gh auth token)
 
 # Run release-it with the specified type
