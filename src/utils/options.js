@@ -58,13 +58,13 @@ const defaults = {
  * @returns {BundledComponentsOptions} Normalized options with all defaults applied
  */
 function normalizeOptions( options ) {
-  const normalized = Object.assign( {}, defaults, options || {} );
+  const normalized = { ...defaults, ...( options || {} ) };
 
   // Ensure postcss configuration has all required properties
-  normalized.postcss = Object.assign( {}, defaults.postcss, normalized.postcss || {} );
+  normalized.postcss = { ...defaults.postcss, ...( normalized.postcss || {} ) };
 
   // Ensure validation configuration has all required properties
-  normalized.validation = Object.assign( {}, defaults.validation, normalized.validation || {} );
+  normalized.validation = { ...defaults.validation, ...( normalized.validation || {} ) };
 
   return normalized;
 }

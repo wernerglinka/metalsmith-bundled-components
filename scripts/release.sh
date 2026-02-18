@@ -27,7 +27,7 @@ if [[ ! "$RELEASE_TYPE" =~ ^(patch|minor|major)$ ]]; then
     exit 1
 fi
 
-echo "🚀 Starting $RELEASE_TYPE release..."
+echo "Starting $RELEASE_TYPE release..."
 
 # Clear any existing GITHUB_TOKEN that might interfere with gh CLI authentication
 unset GITHUB_TOKEN
@@ -38,4 +38,4 @@ export GH_TOKEN=$(gh auth token)
 # Run release-it with the specified type
 npx release-it "$RELEASE_TYPE" $CI_FLAG
 
-echo "✅ Release completed successfully!"
+echo "Release completed successfully!"

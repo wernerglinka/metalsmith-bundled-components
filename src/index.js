@@ -56,7 +56,6 @@ function bundledComponents( options = {} ) {
     debug( 'Running with options: %O', options );
 
     async function processComponents() {
-      try {
         /*
          * Component Discovery
          */
@@ -162,18 +161,18 @@ This likely indicates a configuration error. Please verify:
 
           // Handle validation errors
           if ( allValidationErrors.length > 0 ) {
-            const errorMessage = `❌ Section Validation Errors:\n\n${ allValidationErrors.map( error => `  ${ error.message }` ).join( '\n\n' ) }`;
+            const errorMessage = `Section Validation Errors:\n\n${ allValidationErrors.map( error => `  ${ error.message }` ).join( '\n\n' ) }`;
 
             console.error( errorMessage );
 
             if ( options.validation.strict ) {
               throw new Error( 'Section validation failed' );
             } else {
-              console.warn( '\n⚠️  Validation errors found but continuing build (strict mode disabled)' );
+              console.warn( '\nValidation errors found but continuing build (strict mode disabled)' );
               debug( 'Validation errors: %O', allValidationErrors );
             }
           } else {
-            debug( '✓ All sections validated successfully' );
+            debug( 'All sections validated successfully' );
           }
         }
 
@@ -230,7 +229,7 @@ This likely indicates a configuration error. Please verify:
               : Buffer.from( bundledAssets.css, 'utf8' )
           };
 
-          debug( `✓ Added bundled CSS to ${ options.cssDest }` );
+          debug( `Added bundled CSS to ${ options.cssDest }` );
         }
 
         // Add bundled JS (main + components) to Metalsmith files object
@@ -241,12 +240,9 @@ This likely indicates a configuration error. Please verify:
               : Buffer.from( bundledAssets.js, 'utf8' )
           };
 
-          debug( `✓ Added bundled JS to ${ options.jsDest }` );
+          debug( `Added bundled JS to ${ options.jsDest }` );
         }
 
-      } catch ( error ) {
-        throw error;
-      }
     }
 
     // Execute async processing and handle callback
