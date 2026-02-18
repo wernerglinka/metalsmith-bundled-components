@@ -1,4 +1,4 @@
-// Configuration for ESLint 9.x
+// Configuration for ESLint 10.x
 export default [
   {
     ignores: ['lib/**/*', 'test/fixtures/**/*', 'node_modules/**/*', 'coverage/**/*']
@@ -7,7 +7,15 @@ export default [
     files: ['**/*.js'],
     languageOptions: {
       ecmaVersion: 2022,
-      sourceType: 'module'
+      sourceType: 'module',
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+        Buffer: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        URL: 'readonly'
+      }
     },
     rules: {
       'no-console': [
@@ -24,7 +32,6 @@ export default [
           argsIgnorePattern: '^_'
         }
       ],
-      'space-in-parens': ['error', 'always'],
       eqeqeq: ['error', 'always'],
       curly: ['error', 'all'],
       'dot-notation': 'error',
@@ -41,12 +48,29 @@ export default [
     }
   },
   {
-    files: ['test/**/*.js'],
+    files: ['test/**/*.js', 'test/**/*.cjs'],
+    languageOptions: {
+      globals: {
+        describe: 'readonly',
+        it: 'readonly',
+        before: 'readonly',
+        beforeEach: 'readonly',
+        after: 'readonly',
+        afterEach: 'readonly',
+        console: 'readonly',
+        process: 'readonly',
+        Buffer: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        require: 'readonly',
+        module: 'readonly'
+      }
+    },
     rules: {
       'no-console': 'off',
       'max-depth': 'off',
       'max-params': 'off',
-      'complexity': 'off'
+      complexity: 'off'
     }
   }
 ];

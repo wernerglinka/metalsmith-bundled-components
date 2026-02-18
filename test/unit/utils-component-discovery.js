@@ -1,4 +1,3 @@
-/* eslint-env node,mocha */
 import assert from 'node:assert';
 import fs from 'fs';
 import path from 'path';
