@@ -2,7 +2,7 @@
   "github": {
     "release": true,
     "releaseName": "${name} v${version}",
-    "web": true,
+    "web": false,
     "tokenRef": "GH_TOKEN"
   },
   "git": {
