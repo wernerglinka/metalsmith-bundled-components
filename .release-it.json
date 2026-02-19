@@ -1,21 +1,20 @@
 {
-  "github": {
-    "release": true,
-    "releaseName": "${name} v${version}",
-    "web": false,
-    "tokenRef": "GH_TOKEN"
+  "hooks": {
+    "before:init": ["npm run lint", "npm test"],
+    "after:bump": "npx auto-changelog -p --commit-limit false --ignore-commit-pattern '^((dev|chore|ci):|Release)' && git add CHANGELOG.md",
+    "after:release": "echo Successfully released ${name} v${version} to ${repo.repository}."
   },
   "git": {
     "commitMessage": "Release ${version}",
-    "tagAnnotation": "Release ${version}",
-    "changelog": "npx auto-changelog -u --commit-limit false --ignore-commit-pattern '^((dev|chore|ci):|Release)' --stdout"
-  },
-  "hooks": {
-    "before:init": ["npm run lint:check", "npm test", "npm run build"],
-    "after:bump": "npx auto-changelog -p --commit-limit false --ignore-commit-pattern '^((dev|chore|ci):|Release)' && git add CHANGELOG.md",
-    "after:release": "echo Successfully released ${name} v${version} and created GitHub release."
+    "tagAnnotation": "Release ${version}"
   },
   "npm": {
     "publish": false
+  },
+  "github": {
+    "release": true,
+    "releaseName": "metalsmith-bundled-components ${version}",
+    "tokenRef": "GH_TOKEN",
+    "autoGenerate": true
   }
 }
