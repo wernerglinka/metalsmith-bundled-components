@@ -91,10 +91,35 @@ function parseTemplateFile( fileContent, componentDirs ) {
 }
 
 /**
+ * Recursively walk any value (object or array) and collect all sectionType strings.
+ *
+ * This handles deeply nested component references such as tab panes, carousel slides,
+ * accordion panels, or any other wrapper component that embeds sub-components via a
+ * sectionType property at an arbitrary depth in the frontmatter tree.
+ *
+ * @param {*} value - Any frontmatter value to inspect
+ * @param {Set<string>} result - Accumulator set for discovered sectionType values
+ */
+function collectSectionTypes( value, result ) {
+  if ( !value || typeof value !== 'object' ) { return; }
+
+  if ( Array.isArray( value ) ) {
+    value.forEach( item => collectSectionTypes( item, result ) );
+    return;
+  }
+
+  if ( value.sectionType && typeof value.sectionType === 'string' ) {
+    result.add( value.sectionType );
+  }
+
+  Object.values( value ).forEach( child => collectSectionTypes( child, result ) );
+}
+
+/**
  * Detect all used components across all template files and layout files
  *
  * Scans Metalsmith files object and layout directory for:
- * 1. Components in frontmatter sections array (component-driven approach)
+ * 1. Components in frontmatter — any sectionType value at any nesting depth
  * 2. Component imports in Nunjucks {% from "..." import ... %} statements
  * 3. Components in layout files via {% include "..." %} and {% from "..." import ... %}
  *
@@ -115,15 +140,10 @@ function detectUsedComponents( files, componentDirs, layoutDir ) {
 
     const file = files[ filepath ];
 
-    // Check frontmatter for sections array (component-driven approach)
-    // Each section must be an object with sectionType property
-    if ( file.sections && Array.isArray( file.sections ) ) {
-      file.sections.forEach( section => {
-        if ( section && typeof section === 'object' && section.sectionType ) {
-          allUsedComponents.add( section.sectionType );
-        }
-      } );
-    }
+    // Walk the entire file frontmatter and collect every sectionType value.
+    // This covers top-level sections as well as sub-components nested at any
+    // depth (e.g. tab panes, carousel slides, accordion panels).
+    collectSectionTypes( file, allUsedComponents );
 
     // Skip template parsing if no contents
     if ( !file.contents ) {
@@ -193,5 +213,6 @@ export {
   detectUsedComponents,
   parseTemplateFile,
   extractComponentName,
-  scanLayoutFiles
+  scanLayoutFiles,
+  collectSectionTypes
 };
