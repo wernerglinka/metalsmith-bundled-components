@@ -8,6 +8,7 @@ import {
   validateSections,
   validateObjectProperties,
   validateRequiredProperties,
+  validatePatternConstraint,
   generateTip
 } from '../../src/utils/validation.js';
 
@@ -178,6 +179,31 @@ describe( 'Utils - Validation', () => {
       assert( result.error.includes( 'Must be one of: h1, h2, h3' ) );
     } );
 
+    it( 'should validate pattern values', () => {
+      const rule = { pattern: '^(primary|secondary|tertiary|inverted)( small)?$' };
+
+      // Base values
+      assert.deepStrictEqual( validateProperty( 'primary', rule, 'buttonStyle' ), { valid: true } );
+      assert.deepStrictEqual( validateProperty( 'tertiary', rule, 'buttonStyle' ), { valid: true } );
+      assert.deepStrictEqual( validateProperty( 'inverted', rule, 'buttonStyle' ), { valid: true } );
+
+      // Compound values with small
+      assert.deepStrictEqual( validateProperty( 'primary small', rule, 'buttonStyle' ), { valid: true } );
+      assert.deepStrictEqual( validateProperty( 'tertiary small', rule, 'buttonStyle' ), { valid: true } );
+
+      // Invalid values
+      const result = validateProperty( 'giant', rule, 'buttonStyle' );
+      assert.strictEqual( result.valid, false );
+      assert( result.error.includes( '"giant" does not match pattern' ) );
+    } );
+
+    it( 'should fail pattern validation for non-string values', () => {
+      const rule = { pattern: '^(primary|secondary)$' };
+      const result = validateProperty( 42, rule, 'buttonStyle' );
+      assert.strictEqual( result.valid, false );
+      assert( result.error.includes( 'expected string for pattern validation' ) );
+    } );
+
     it( 'should handle undefined/null values gracefully', () => {
       assert.deepStrictEqual( validateProperty( undefined, { type: 'string' }, 'test' ), { valid: true } );
       assert.deepStrictEqual( validateProperty( null, { type: 'string' }, 'test' ), { valid: true } );
@@ -220,6 +246,33 @@ describe( 'Utils - Validation', () => {
       const result = validateProperty( ['a', 123], rule, 'tags' );
       assert.strictEqual( result.valid, false );
       assert( result.error.includes( 'tags[1]' ) );
+    } );
+  } );
+
+  describe( 'validatePatternConstraint', () => {
+    it( 'should pass when no pattern rule is set', () => {
+      const result = validatePatternConstraint( 'anything', {}, 'test' );
+      assert.deepStrictEqual( result, { valid: true } );
+    } );
+
+    it( 'should pass for matching values', () => {
+      const rule = { pattern: '^(primary|secondary|tertiary|inverted)( small)?$' };
+      assert.deepStrictEqual( validatePatternConstraint( 'primary', rule, 'buttonStyle' ), { valid: true } );
+      assert.deepStrictEqual( validatePatternConstraint( 'secondary small', rule, 'buttonStyle' ), { valid: true } );
+    } );
+
+    it( 'should fail for non-matching values', () => {
+      const rule = { pattern: '^(primary|secondary)$' };
+      const result = validatePatternConstraint( 'tertiary', rule, 'buttonStyle' );
+      assert.strictEqual( result.valid, false );
+      assert( result.error.includes( '"tertiary" does not match pattern' ) );
+    } );
+
+    it( 'should fail for non-string values', () => {
+      const rule = { pattern: '^test$' };
+      const result = validatePatternConstraint( 123, rule, 'field' );
+      assert.strictEqual( result.valid, false );
+      assert( result.error.includes( 'expected string for pattern validation' ) );
     } );
   } );
 

@@ -3,6 +3,7 @@
  * @property {string} [type] - Expected type (boolean, string, number, array, object)
  * @property {*} [const] - Single valid value
  * @property {Array} [enum] - Array of valid values
+ * @property {string} [pattern] - Regex pattern the value must match
  * @property {*} [default] - Default value (for documentation)
  * @property {Object} [items] - Validation for array items
  * @property {Object} [properties] - Validation for object properties
@@ -184,7 +185,7 @@ function validateEnumConstraint( value, rule, propertyPath ) {
   if ( !rule.enum ) {
     return { valid: true };
   }
-  
+
   if ( !rule.enum.includes( value ) ) {
     const tip = generateTip( value, rule );
     return {
@@ -192,7 +193,37 @@ function validateEnumConstraint( value, rule, propertyPath ) {
       error: `${propertyPath}: "${value}" is invalid. Must be one of: ${rule.enum.join( ', ' )}${tip ? `\nTip: ${tip}` : ''}`
     };
   }
-  
+
+  return { valid: true };
+}
+
+/**
+ * Validate pattern constraint
+ * @param {*} value - Value to validate
+ * @param {ValidationRule} rule - Validation rule
+ * @param {string} propertyPath - Property path for error messages
+ * @returns {ValidationResult} Validation result
+ */
+function validatePatternConstraint( value, rule, propertyPath ) {
+  if ( !rule.pattern ) {
+    return { valid: true };
+  }
+
+  if ( typeof value !== 'string' ) {
+    return {
+      valid: false,
+      error: `${propertyPath}: expected string for pattern validation, got ${typeof value}`
+    };
+  }
+
+  const regex = new RegExp( rule.pattern );
+  if ( !regex.test( value ) ) {
+    return {
+      valid: false,
+      error: `${propertyPath}: "${value}" does not match pattern ${rule.pattern}`
+    };
+  }
+
   return { valid: true };
 }
 
@@ -258,7 +289,12 @@ function validateProperty( value, rule, propertyPath ) {
   if ( !enumResult.valid ) {
     return enumResult;
   }
-  
+
+  const patternResult = validatePatternConstraint( value, rule, propertyPath );
+  if ( !patternResult.valid ) {
+    return patternResult;
+  }
+
   const arrayResult = validateArrayItems( value, rule, propertyPath );
   if ( !arrayResult.valid ) {
     return arrayResult;
@@ -400,18 +436,19 @@ function validateSections( sections, getManifest, fileName = '' ) {
   return errors;
 }
 
-export { 
-  getNestedProperty, 
-  setNestedProperty, 
-  hasNestedProperty, 
-  validateProperty, 
-  validateSection, 
+export {
+  getNestedProperty,
+  setNestedProperty,
+  hasNestedProperty,
+  validateProperty,
+  validateSection,
   validateSections,
   validateObjectProperties,
   validateRequiredProperties,
   validateTypeConstraint,
   validateConstConstraint,
   validateEnumConstraint,
+  validatePatternConstraint,
   validateArrayItems,
   generateTip
 };

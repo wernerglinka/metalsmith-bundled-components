@@ -83,6 +83,18 @@ Component manifests already exist and are read during the bundling process. Addi
 - **const**: Single valid value (e.g., `sectionType: "hero"`)
 - **enum**: Multiple valid values (e.g., `titleTag: ["h1", "h2", "h3"]`)
 
+### Pattern Validation
+- **pattern**: Regex pattern the value must match. Use this instead of `enum` when values support compound forms or other flexible syntax.
+
+Example: `buttonStyle` accepts base styles optionally combined with `small`:
+```json
+"buttonStyle": {
+  "type": "string",
+  "pattern": "^(primary|secondary|tertiary|inverted)( small)?$"
+}
+```
+This accepts `"primary"`, `"tertiary small"`, `"inverted small"`, etc.
+
 ### Nested Property Support
 Use dot notation for nested properties:
 - `containerFields.isAnimated`
@@ -240,6 +252,17 @@ function validateProperty(value, rule, propertyPath) {
       valid: false,
       error: `${propertyPath}: "${value}" is invalid. Must be one of: ${rule.enum.join(', ')}`
     };
+  }
+  
+  // Pattern validation
+  if (rule.pattern && typeof value === 'string') {
+    const regex = new RegExp(rule.pattern);
+    if (!regex.test(value)) {
+      return {
+        valid: false,
+        error: `${propertyPath}: "${value}" does not match pattern ${rule.pattern}`
+      };
+    }
   }
   
   return { valid: true };

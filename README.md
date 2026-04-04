@@ -264,7 +264,7 @@ Add a `validation` object to your component's `manifest.json`:
             },
             "buttonStyle": {
               "type": "string",
-              "enum": ["primary", "secondary", "ghost", "none"]
+              "pattern": "^(primary|secondary|ghost|none)( small)?$"
             }
           }
         }
@@ -279,6 +279,17 @@ Add a `validation` object to your component's `manifest.json`:
 **Type Validation**: Ensure fields are actual booleans, strings, numbers, or arrays - not string representations.
 
 **Enum Validation**: Restrict values to predefined options (e.g., `titleTag: ["h1", "h2", "h3"]`).
+
+**Pattern Validation**: Match values against a regex pattern. Use this instead of `enum` when values support compound forms, e.g., `buttonStyle` accepts a base style optionally followed by `small`:
+
+```json
+"buttonStyle": {
+  "type": "string",
+  "pattern": "^(primary|secondary|tertiary|inverted)( small)?$"
+}
+```
+
+This accepts `"primary"`, `"tertiary small"`, `"inverted small"`, etc.
 
 **Nested Properties**: Use dot notation for nested validation (`containerFields.isAnimated`).
 
