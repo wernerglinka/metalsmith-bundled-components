@@ -7,6 +7,7 @@ The Component Bundler is a Metalsmith plugin that automatically discovers and bu
 ## Problem Statement
 
 In component-based web development, we want to:
+
 - Keep CSS and JS files together with their component templates
 - Avoid manual maintenance of asset import lists
 - Ensure predictable loading order for namespaced components
@@ -65,7 +66,6 @@ Each component can include an optional `manifest.json` file:
 }
 ```
 
-
 ### Processing Pipeline
 
 #### 1. Template Analysis (Automatic Tree-Shaking)
@@ -73,26 +73,29 @@ Each component can include an optional `manifest.json` file:
 The plugin analyzes page templates to detect which components are actually used:
 
 **Detection Methods:**
+
 1. **Frontmatter sections arrays** (primary method) - Reads `sectionType` from page metadata
 2. **Layout file scanning** - Parses `{% include "..." %}` and `{% from "..." import ... %}` in layout templates
 3. **Nunjucks import statements** - Parses `{% from "..." import ... %}` statements in page templates
 
 **Example page frontmatter:**
+
 ```yaml
 ---
 sections:
   - sectionType: hero
     text:
-      title: "Welcome"
+      title: 'Welcome'
   - sectionType: banner
     background:
-      image: "/hero.jpg"
+      image: '/hero.jpg'
 ---
 ```
 
 From this frontmatter, the plugin detects: `["hero", "banner"]`
 
 **Example layout file:**
+
 ```nunjucks
 {% from "components/_partials/breadcrumbs/breadcrumbs.njk" import breadcrumbs %}
 {% include "components/sections/header/header.njk" %}
@@ -108,12 +111,14 @@ The plugin scans both page templates AND layout files (in `lib/layouts/`) to ens
 Once directly-used components are identified, the plugin follows dependency chains:
 
 **Process:**
+
 1. Start with components declared in page frontmatter
 2. For each component, read its `requires` array from manifest.json
 3. Recursively resolve all transitive dependencies
 4. De-duplicate (using Set) to ensure each component appears once
 
 **Example:**
+
 - Page uses: `hero`
 - `hero` requires: `["button", "image"]`
 - `button` requires: `["icon"]`
@@ -152,6 +157,7 @@ Since components are namespaced (CSS) and wrapped in IIFEs (JS), load order does
 The plugin uses esbuild.build() with plugins for modern, optimized asset processing:
 
 **Build Order:**
+
 - Main CSS/JS entry points first (if specified)
 - Base components that are needed (filesystem discovery order)
 - Section components that are needed (filesystem discovery order)
@@ -163,7 +169,7 @@ The plugin uses esbuild.build() with plugins for modern, optimized asset process
 - **Concatenates** main CSS entry + all component CSS files together
 - **Copies** concatenated CSS and @import dependencies to temporary directory
 - **Resolves** @import statements using esbuild bundling (preserves relative paths)
-- **Applies** PostCSS transformations via esbuild-plugin-postcss  
+- **Applies** PostCSS transformations via esbuild-plugin-postcss
 - **Minifies** entire combined CSS output when minifyOutput is enabled
 - **Outputs** single optimized CSS file to build directory
 - **Cleans up** temporary files automatically
@@ -198,25 +204,27 @@ The plugin uses intelligent analysis to minimize bundle sizes:
 4. **Filtering** - Remove components not detected in template analysis from the bundle
 
 **Algorithm (Breadth-First Dependency Resolution):**
+
 ```javascript
 function resolveAllDependencies(usedComponents, componentMap) {
-  const resolved = new Set(usedComponents);  // Start with directly-used components
-  const queue = [...usedComponents];          // Queue for BFS
+  const resolved = new Set(usedComponents); // Start with directly-used components
+  const queue = [...usedComponents]; // Queue for BFS
 
   while (queue.length > 0) {
     const current = queue.shift();
     const component = componentMap.get(current);
     const requires = component.requires || [];
 
-    requires.forEach(dep => {
-      if (!resolved.has(dep)) {  // Only process if not already resolved
-        resolved.add(dep);        // Add to result set
-        queue.push(dep);          // Add to queue for processing
+    requires.forEach((dep) => {
+      if (!resolved.has(dep)) {
+        // Only process if not already resolved
+        resolved.add(dep); // Add to result set
+        queue.push(dep); // Add to queue for processing
       }
     });
   }
 
-  return resolved;  // All components needed (direct + transitive)
+  return resolved; // All components needed (direct + transitive)
 }
 ```
 
@@ -231,6 +239,7 @@ After filtering to needed components only, components are processed in filesyste
 3. **Section components** - Process only needed ones (in discovery order)
 
 This approach works because:
+
 - Components are namespaced (CSS) to avoid specificity conflicts
 - Components are wrapped in IIFEs (JS) for scope isolation
 - Load order doesn't affect functionality
@@ -247,6 +256,7 @@ Simple existence checking ensures all dependencies are available:
 Circular dependency detection is not needed since load order doesn't affect functionality.
 
 ### Configuration Options
+
 ```javascript
 {
   basePath: 'lib/layouts/components/_partials',  // Where to find base components
@@ -269,6 +279,7 @@ Circular dependency detection is not needed since load order doesn't affect func
   }
 }
 ```
+
 ### Benefits
 
 - **Automatic Tree-Shaking** - Analyzes templates to bundle only used components
@@ -319,6 +330,7 @@ The plugin architecture supports future additions:
 - Module federation support
 
 ### Error Handling
+
 The plugin validates:
 
 - Component manifests are valid JSON

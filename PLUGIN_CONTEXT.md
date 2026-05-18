@@ -74,35 +74,44 @@ Component manifests already exist and are read during the bundling process. Addi
 ## Validation Types
 
 ### Type Validation
+
 - **boolean**: Ensure fields are actual booleans, not strings
 - **string**: Validate string fields
-- **number**: Ensure numeric fields are numbers, not strings  
+- **number**: Ensure numeric fields are numbers, not strings
 - **array**: Validate array structures
 
 ### Enum Validation
+
 - **const**: Single valid value (e.g., `sectionType: "hero"`)
 - **enum**: Multiple valid values (e.g., `titleTag: ["h1", "h2", "h3"]`)
 
 ### Pattern Validation
+
 - **pattern**: Regex pattern the value must match. Use this instead of `enum` when values support compound forms or other flexible syntax.
 
 Example: `buttonStyle` accepts base styles optionally combined with `small`:
+
 ```json
 "buttonStyle": {
   "type": "string",
   "pattern": "^(primary|secondary|tertiary|inverted)( small)?$"
 }
 ```
+
 This accepts `"primary"`, `"tertiary small"`, `"inverted small"`, etc.
 
 ### Nested Property Support
+
 Use dot notation for nested properties:
+
 - `containerFields.isAnimated`
 - `containerFields.background.imageScreen`
 - `text.titleTag`
 
 ### Array Item Validation
+
 Validate properties within array items:
+
 ```json
 "ctas": {
   "type": "array",
@@ -120,24 +129,26 @@ Validate properties within array items:
 ## Implementation Strategy
 
 ### 1. Validation Timing
+
 Validate sections during the component scanning phase, before dependency bundling:
 
 ```javascript
 // Pseudo-code integration point
-pages.forEach(page => {
-  page.sections?.forEach(section => {
+pages.forEach((page) => {
+  page.sections?.forEach((section) => {
     const manifest = loadComponentManifest(section.sectionType);
-    
+
     if (manifest.validation) {
       validateSection(section, manifest.validation);
     }
-    
+
     // Continue with existing bundling logic...
   });
 });
 ```
 
 ### 2. Error Handling
+
 Provide clear, actionable error messages with file context:
 
 ```
@@ -152,6 +163,7 @@ Tip: String "false" evaluates to true in templates. Use boolean false instead.
 ```
 
 ### 3. Backward Compatibility
+
 - Components without `validation` key continue to work unchanged
 - Validation is purely additive - no breaking changes
 - Plugin should gracefully handle malformed validation rules
@@ -159,47 +171,49 @@ Tip: String "false" evaluates to true in templates. Use boolean false instead.
 ## Testing Strategy
 
 ### Unit Tests
+
 ```javascript
 describe('Validation', () => {
   it('should validate boolean types correctly', () => {
-    const section = { isAnimated: "false" };
-    const validation = { properties: { isAnimated: { type: "boolean" }}};
-    
+    const section = { isAnimated: 'false' };
+    const validation = { properties: { isAnimated: { type: 'boolean' } } };
+
     expect(() => validateSection(section, validation)).toThrow();
   });
-  
+
   it('should validate enum values', () => {
-    const section = { text: { titleTag: "header" }};
+    const section = { text: { titleTag: 'header' } };
     const validation = {
       properties: {
-        "text.titleTag": {
-          type: "string",
-          enum: ["h1", "h2", "h3", "h4", "h5", "h6"]
+        'text.titleTag': {
+          type: 'string',
+          enum: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']
         }
       }
     };
-    
+
     expect(() => validateSection(section, validation)).toThrow();
   });
-  
+
   it('should allow valid configurations', () => {
-    const section = { 
+    const section = {
       isAnimated: true,
-      text: { titleTag: "h2" }
+      text: { titleTag: 'h2' }
     };
     const validation = {
       properties: {
-        isAnimated: { type: "boolean" },
-        "text.titleTag": { type: "string", enum: ["h1", "h2", "h3"] }
+        isAnimated: { type: 'boolean' },
+        'text.titleTag': { type: 'string', enum: ['h1', 'h2', 'h3'] }
       }
     };
-    
+
     expect(() => validateSection(section, validation)).not.toThrow();
   });
 });
 ```
 
 ### Integration Tests
+
 - Test validation with real component manifests from this starter
 - Verify error messages include file names and section indices
 - Test that valid configurations continue to work
@@ -229,7 +243,7 @@ function getNestedProperty(obj, path) {
  */
 function validateProperty(value, rule, propertyPath) {
   if (value === undefined) return { valid: true }; // Optional properties
-  
+
   // Type validation
   if (rule.type && typeof value !== rule.type) {
     return {
@@ -237,7 +251,7 @@ function validateProperty(value, rule, propertyPath) {
       error: `${propertyPath}: expected ${rule.type}, got ${typeof value} "${value}"`
     };
   }
-  
+
   // Const validation
   if (rule.const && value !== rule.const) {
     return {
@@ -245,7 +259,7 @@ function validateProperty(value, rule, propertyPath) {
       error: `${propertyPath}: expected "${rule.const}", got "${value}"`
     };
   }
-  
+
   // Enum validation
   if (rule.enum && !rule.enum.includes(value)) {
     return {
@@ -253,7 +267,7 @@ function validateProperty(value, rule, propertyPath) {
       error: `${propertyPath}: "${value}" is invalid. Must be one of: ${rule.enum.join(', ')}`
     };
   }
-  
+
   // Pattern validation
   if (rule.pattern && typeof value === 'string') {
     const regex = new RegExp(rule.pattern);
@@ -264,7 +278,7 @@ function validateProperty(value, rule, propertyPath) {
       };
     }
   }
-  
+
   return { valid: true };
 }
 ```
@@ -272,6 +286,7 @@ function validateProperty(value, rule, propertyPath) {
 ## Examples from This Starter
 
 This starter includes validation rules for:
+
 - **hero**: Boolean flags, titleTag enum, CTA button styles, background options
 - **banner**: Similar to hero with appropriate defaults
 - More components can be added gradually

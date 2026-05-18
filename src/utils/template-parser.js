@@ -37,16 +37,16 @@ const INCLUDE_PATTERN = /\{%\s*include\s*["']([^"']+)["']\s*%\}/g;
  * @param {string[]} componentDirs - Component directory names to look for (_partials, sections)
  * @returns {string|null} - Component name or null if not a component import
  */
-function extractComponentName( importPath, componentDirs ) {
+function extractComponentName(importPath, componentDirs) {
   // Split path into segments
-  const segments = importPath.split( '/' );
+  const segments = importPath.split('/');
 
   // Look for component directory markers (_partials, sections, etc.)
-  for ( let i = 0; i < segments.length; i++ ) {
-    if ( componentDirs.includes( segments[ i ] ) ) {
+  for (let i = 0; i < segments.length; i++) {
+    if (componentDirs.includes(segments[i])) {
       // Component name is the next segment after the directory marker
-      if ( i + 1 < segments.length ) {
-        return segments[ i + 1 ];
+      if (i + 1 < segments.length) {
+        return segments[i + 1];
       }
     }
   }
@@ -61,29 +61,29 @@ function extractComponentName( importPath, componentDirs ) {
  * @param {string[]} componentDirs - Component directory names (_partials, sections)
  * @returns {Set<string>} - Set of component names imported in this file
  */
-function parseTemplateFile( fileContent, componentDirs ) {
+function parseTemplateFile(fileContent, componentDirs) {
   const importedComponents = new Set();
   let match;
 
   // Check {% from "..." import ... %} statements
   IMPORT_PATTERN.lastIndex = 0;
-  while ( ( match = IMPORT_PATTERN.exec( fileContent ) ) !== null ) {
-    const importPath = match[ 1 ];
-    const componentName = extractComponentName( importPath, componentDirs );
+  while ((match = IMPORT_PATTERN.exec(fileContent)) !== null) {
+    const importPath = match[1];
+    const componentName = extractComponentName(importPath, componentDirs);
 
-    if ( componentName ) {
-      importedComponents.add( componentName );
+    if (componentName) {
+      importedComponents.add(componentName);
     }
   }
 
   // Check {% include "..." %} statements
   INCLUDE_PATTERN.lastIndex = 0;
-  while ( ( match = INCLUDE_PATTERN.exec( fileContent ) ) !== null ) {
-    const includePath = match[ 1 ];
-    const componentName = extractComponentName( includePath, componentDirs );
+  while ((match = INCLUDE_PATTERN.exec(fileContent)) !== null) {
+    const includePath = match[1];
+    const componentName = extractComponentName(includePath, componentDirs);
 
-    if ( componentName ) {
-      importedComponents.add( componentName );
+    if (componentName) {
+      importedComponents.add(componentName);
     }
   }
 
@@ -100,19 +100,21 @@ function parseTemplateFile( fileContent, componentDirs ) {
  * @param {*} value - Any frontmatter value to inspect
  * @param {Set<string>} result - Accumulator set for discovered sectionType values
  */
-function collectSectionTypes( value, result ) {
-  if ( !value || typeof value !== 'object' ) { return; }
-
-  if ( Array.isArray( value ) ) {
-    value.forEach( item => collectSectionTypes( item, result ) );
+function collectSectionTypes(value, result) {
+  if (!value || typeof value !== 'object') {
     return;
   }
 
-  if ( value.sectionType && typeof value.sectionType === 'string' ) {
-    result.add( value.sectionType );
+  if (Array.isArray(value)) {
+    value.forEach((item) => collectSectionTypes(item, result));
+    return;
   }
 
-  Object.values( value ).forEach( child => collectSectionTypes( child, result ) );
+  if (value.sectionType && typeof value.sectionType === 'string') {
+    result.add(value.sectionType);
+  }
+
+  Object.values(value).forEach((child) => collectSectionTypes(child, result));
 }
 
 /**
@@ -128,42 +130,40 @@ function collectSectionTypes( value, result ) {
  * @param {string|null} layoutDir - Path to layouts directory for scanning (or null to skip)
  * @returns {Set<string>} - Set of all component names used in templates
  */
-function detectUsedComponents( files, componentDirs, layoutDir ) {
+function detectUsedComponents(files, componentDirs, layoutDir) {
   const allUsedComponents = new Set();
 
   // Process all template files in Metalsmith files object
-  Object.keys( files ).forEach( filepath => {
+  Object.keys(files).forEach((filepath) => {
     // Only process template files
-    if ( !filepath.endsWith( '.njk' ) && !filepath.endsWith( '.html' ) ) {
+    if (!filepath.endsWith('.njk') && !filepath.endsWith('.html')) {
       return;
     }
 
-    const file = files[ filepath ];
+    const file = files[filepath];
 
     // Walk the entire file frontmatter and collect every sectionType value.
     // This covers top-level sections as well as sub-components nested at any
     // depth (e.g. tab panes, carousel slides, accordion panels).
-    collectSectionTypes( file, allUsedComponents );
+    collectSectionTypes(file, allUsedComponents);
 
     // Skip template parsing if no contents
-    if ( !file.contents ) {
+    if (!file.contents) {
       return;
     }
 
     // Get file contents as string
-    const content = Buffer.isBuffer( file.contents )
-      ? file.contents.toString( 'utf8' )
-      : String( file.contents );
+    const content = Buffer.isBuffer(file.contents) ? file.contents.toString('utf8') : String(file.contents);
 
     // Parse Nunjucks imports and add components to the set
-    const fileComponents = parseTemplateFile( content, componentDirs );
-    fileComponents.forEach( component => allUsedComponents.add( component ) );
-  } );
+    const fileComponents = parseTemplateFile(content, componentDirs);
+    fileComponents.forEach((component) => allUsedComponents.add(component));
+  });
 
   // Also scan layout files if layoutDir is provided
-  if ( layoutDir ) {
-    const layoutComponents = scanLayoutFiles( layoutDir, componentDirs );
-    layoutComponents.forEach( component => allUsedComponents.add( component ) );
+  if (layoutDir) {
+    const layoutComponents = scanLayoutFiles(layoutDir, componentDirs);
+    layoutComponents.forEach((component) => allUsedComponents.add(component));
   }
 
   return allUsedComponents;
@@ -175,29 +175,29 @@ function detectUsedComponents( files, componentDirs, layoutDir ) {
  * @param {string[]} componentDirs - Component directory names (_partials, sections)
  * @returns {Set<string>} - Set of component names found in layout files
  */
-function scanLayoutFiles( layoutDir, componentDirs ) {
+function scanLayoutFiles(layoutDir, componentDirs) {
   const components = new Set();
 
   // Check if directory exists
-  if ( !fs.existsSync( layoutDir ) ) {
+  if (!fs.existsSync(layoutDir)) {
     return components;
   }
 
-  function scanDirectory( dir ) {
-    const entries = fs.readdirSync( dir, { withFileTypes: true } );
+  function scanDirectory(dir) {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
 
-    for ( const entry of entries ) {
-      const fullPath = path.join( dir, entry.name );
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
 
-      if ( entry.isDirectory() ) {
+      if (entry.isDirectory()) {
         // Recursively scan subdirectories
-        scanDirectory( fullPath );
-      } else if ( entry.isFile() && entry.name.endsWith( '.njk' ) ) {
+        scanDirectory(fullPath);
+      } else if (entry.isFile() && entry.name.endsWith('.njk')) {
         // Parse .njk template files
         try {
-          const content = fs.readFileSync( fullPath, 'utf8' );
-          const fileComponents = parseTemplateFile( content, componentDirs );
-          fileComponents.forEach( comp => components.add( comp ) );
+          const content = fs.readFileSync(fullPath, 'utf8');
+          const fileComponents = parseTemplateFile(content, componentDirs);
+          fileComponents.forEach((comp) => components.add(comp));
         } catch {
           // Silently skip files that can't be read
         }
@@ -205,14 +205,8 @@ function scanLayoutFiles( layoutDir, componentDirs ) {
     }
   }
 
-  scanDirectory( layoutDir );
+  scanDirectory(layoutDir);
   return components;
 }
 
-export {
-  detectUsedComponents,
-  parseTemplateFile,
-  extractComponentName,
-  scanLayoutFiles,
-  collectSectionTypes
-};
+export { detectUsedComponents, parseTemplateFile, extractComponentName, scanLayoutFiles, collectSectionTypes };

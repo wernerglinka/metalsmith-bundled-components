@@ -11,10 +11,10 @@
  * @returns {Object} Component manifest object
  * @throws {Error} If component is not found
  */
-function getManifest( componentMap, sectionType ) {
-  const component = componentMap.get( sectionType );
-  if ( !component ) {
-    throw new Error( `Component "${ sectionType }" not found` );
+function getManifest(componentMap, sectionType) {
+  const component = componentMap.get(sectionType);
+  if (!component) {
+    throw new Error(`Component "${sectionType}" not found`);
   }
   return component;
 }

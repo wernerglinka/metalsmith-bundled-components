@@ -32,32 +32,34 @@ import path from 'path';
  * @param {string} dirPath - Directory to scan for components
  * @returns {Array} Array of component objects with metadata and file paths
  */
-function collectComponents( dirPath ) {
+function collectComponents(dirPath) {
   // Component directories are optional - return empty array if not found
   // This allows projects to have only partials or only sections
-  if ( !fs.existsSync( dirPath ) ) {
+  if (!fs.existsSync(dirPath)) {
     return [];
   }
 
   // Read all items in the component directory (e.g., 'button', 'hero', etc.)
-  const items = fs.readdirSync( dirPath );
+  const items = fs.readdirSync(dirPath);
   const components = [];
 
-  items.forEach( item => {
-    const itemPath = path.join( dirPath, item );
-    const stats = fs.statSync( itemPath );
+  items.forEach((item) => {
+    const itemPath = path.join(dirPath, item);
+    const stats = fs.statSync(itemPath);
 
     // Skip files - we only process directories (each directory is a component)
-    if ( !stats.isDirectory() ) {return;}
+    if (!stats.isDirectory()) {
+      return;
+    }
 
     // Load the component from its directory (reads manifest or auto-generates)
-    const component = loadComponent( itemPath, item );
+    const component = loadComponent(itemPath, item);
 
     // Only add successfully loaded components (null means loading failed)
-    if ( component ) {
-      components.push( component );
+    if (component) {
+      components.push(component);
     }
-  } );
+  });
 
   return components;
 }
@@ -72,28 +74,28 @@ function collectComponents( dirPath ) {
  * @param {string} componentName - Component name
  * @returns {Object|null} Component object or null if invalid
  */
-function loadComponent( componentPath, componentName ) {
-  const manifestPath = path.join( componentPath, 'manifest.json' );
+function loadComponent(componentPath, componentName) {
+  const manifestPath = path.join(componentPath, 'manifest.json');
   let manifest;
 
   // Try to load an explicit manifest file if it exists
-  if ( fs.existsSync( manifestPath ) ) {
+  if (fs.existsSync(manifestPath)) {
     try {
-      manifest = JSON.parse( fs.readFileSync( manifestPath, 'utf8' ) );
-    } catch ( error ) {
+      manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    } catch (error) {
       // Invalid JSON - log error and skip this component
-      console.error( `Invalid manifest.json in ${ componentName }: ${ error.message }` );
+      console.error(`Invalid manifest.json in ${componentName}: ${error.message}`);
       return null;
     }
   } else {
     // No manifest found - auto-generate based on component name conventions
     // Looks for componentName.css and componentName.js files
-    manifest = autoGenerateManifest( componentPath, componentName );
+    manifest = autoGenerateManifest(componentPath, componentName);
   }
 
   // Validate that manifest has the required 'name' field
-  if ( !manifest.name ) {
-    console.error( `Missing 'name' in manifest for ${ componentName }` );
+  if (!manifest.name) {
+    console.error(`Missing 'name' in manifest for ${componentName}`);
     return null;
   }
 
@@ -123,18 +125,18 @@ function loadComponent( componentPath, componentName ) {
  * @param {string} componentName - Component name
  * @returns {Object} Generated manifest
  */
-function autoGenerateManifest( componentPath, componentName ) {
+function autoGenerateManifest(componentPath, componentName) {
   // Expected file names based on component name
   // Example: 'button' component looks for 'button.css' and 'button.js'
-  const cssFile = `${ componentName }.css`;
-  const jsFile = `${ componentName }.js`;
+  const cssFile = `${componentName}.css`;
+  const jsFile = `${componentName}.js`;
 
   return {
     name: componentName,
     type: 'auto', // Mark as auto-generated for debugging
     // Only include files that actually exist on disk
-    styles: fs.existsSync( path.join( componentPath, cssFile ) ) ? [ cssFile ] : [],
-    scripts: fs.existsSync( path.join( componentPath, jsFile ) ) ? [ jsFile ] : [],
+    styles: fs.existsSync(path.join(componentPath, cssFile)) ? [cssFile] : [],
+    scripts: fs.existsSync(path.join(componentPath, jsFile)) ? [jsFile] : [],
     // Auto-generated manifests can't know dependencies - must be explicit
     dependencies: []
   };
@@ -153,19 +155,19 @@ function autoGenerateManifest( componentPath, componentName ) {
  * @returns {Map} Component map keyed by name
  * @throws {Error} If duplicate component names are found
  */
-function createComponentMap( components ) {
+function createComponentMap(components) {
   const componentMap = new Map();
 
-  components.forEach( component => {
+  components.forEach((component) => {
     // Detect duplicate component names across partials and sections
     // This prevents ambiguity in dependency resolution
-    if ( componentMap.has( component.name ) ) {
-      throw new Error( `Duplicate component name: ${ component.name }` );
+    if (componentMap.has(component.name)) {
+      throw new Error(`Duplicate component name: ${component.name}`);
     }
 
     // Map stores: componentName → full component object with path, styles, scripts, etc.
-    componentMap.set( component.name, component );
-  } );
+    componentMap.set(component.name, component);
+  });
 
   return componentMap;
 }

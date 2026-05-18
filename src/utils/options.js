@@ -28,43 +28,43 @@
 
 /** @type {BundledComponentsOptions} */
 const defaults = {
-  basePath: 'lib/layouts/components/_partials',    // Base/partial components (buttons, cards, etc.)
+  basePath: 'lib/layouts/components/_partials', // Base/partial components (buttons, cards, etc.)
   sectionsPath: 'lib/layouts/components/sections', // Section components (hero, banner, etc.)
-  layoutsPath: 'lib/layouts',                      // Layouts directory for scanning includes
-  cssDest: 'assets/main.css',                      // Output path for bundled CSS (main + components)
-  jsDest: 'assets/main.js',                        // Output path for bundled JS (main + components)
-  mainCSSEntry: 'lib/assets/main.css',             // Main CSS entry (design tokens, base styles)
-  mainJSEntry: 'lib/assets/main.js',               // Main JS entry (app initialization)
-  minifyOutput: false,                             // Enable esbuild minification
+  layoutsPath: 'lib/layouts', // Layouts directory for scanning includes
+  cssDest: 'assets/main.css', // Output path for bundled CSS (main + components)
+  jsDest: 'assets/main.js', // Output path for bundled JS (main + components)
+  mainCSSEntry: 'lib/assets/main.css', // Main CSS entry (design tokens, base styles)
+  mainJSEntry: 'lib/assets/main.js', // Main JS entry (app initialization)
+  minifyOutput: false, // Enable esbuild minification
   postcss: {
-    enabled: false,                                // PostCSS via esbuild plugin
-    plugins: [],                                   // PostCSS plugins array
-    options: {}                                    // Additional PostCSS options
+    enabled: false, // PostCSS via esbuild plugin
+    plugins: [], // PostCSS plugins array
+    options: {} // Additional PostCSS options
   },
   validation: {
-    enabled: true,                                 // Component property validation
-    strict: false,                                 // Warn vs fail on validation errors
-    reportAllErrors: true                          // Report all errors vs stop on first
+    enabled: true, // Component property validation
+    strict: false, // Warn vs fail on validation errors
+    reportAllErrors: true // Report all errors vs stop on first
   }
 };
 
 /**
  * Normalize and merge plugin options with defaults
- * 
+ *
  * Ensures all configuration objects have required properties and applies
  * sensible defaults for the simplified esbuild-based architecture.
- * 
+ *
  * @param {BundledComponentsOptions} [options] - User-provided options
  * @returns {BundledComponentsOptions} Normalized options with all defaults applied
  */
-function normalizeOptions( options ) {
-  const normalized = { ...defaults, ...( options || {} ) };
+function normalizeOptions(options) {
+  const normalized = { ...defaults, ...(options || {}) };
 
   // Ensure postcss configuration has all required properties
-  normalized.postcss = { ...defaults.postcss, ...( normalized.postcss || {} ) };
+  normalized.postcss = { ...defaults.postcss, ...(normalized.postcss || {}) };
 
   // Ensure validation configuration has all required properties
-  normalized.validation = { ...defaults.validation, ...( normalized.validation || {} ) };
+  normalized.validation = { ...defaults.validation, ...(normalized.validation || {}) };
 
   return normalized;
 }

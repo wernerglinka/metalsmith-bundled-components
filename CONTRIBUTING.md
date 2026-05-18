@@ -17,6 +17,7 @@ Thank you for your interest in contributing to this Metalsmith plugin! This docu
 ## Development Workflow
 
 1. Create a branch for your changes:
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -26,16 +27,19 @@ Thank you for your interest in contributing to this Metalsmith plugin! This docu
 3. Add tests for your changes
 
 4. Run tests:
+
    ```bash
    npm test
    ```
 
 5. Run linting:
+
    ```bash
    npm run lint
    ```
 
 6. Format your code:
+
    ```bash
    npm run format
    ```

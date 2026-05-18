@@ -24,28 +24,28 @@
  * // Input: new Set(['hero'])
  * // Output: new Set(['hero', 'button', 'icon'])
  */
-function resolveAllDependencies( usedComponents, componentMap ) {
-  const resolved = new Set( usedComponents );
-  const queue = [ ...usedComponents ];
+function resolveAllDependencies(usedComponents, componentMap) {
+  const resolved = new Set(usedComponents);
+  const queue = [...usedComponents];
 
-  while ( queue.length > 0 ) {
+  while (queue.length > 0) {
     const currentName = queue.shift();
-    const component = componentMap.get( currentName );
+    const component = componentMap.get(currentName);
 
     // Skip if component not found (will be caught by validation later)
-    if ( !component ) {
+    if (!component) {
       continue;
     }
 
     // Get requirements (supports both 'requires' and legacy 'dependencies')
     const requirements = component.requires || component.dependencies || [];
 
-    requirements.forEach( requiredName => {
-      if ( !resolved.has( requiredName ) ) {
-        resolved.add( requiredName );
-        queue.push( requiredName );
+    requirements.forEach((requiredName) => {
+      if (!resolved.has(requiredName)) {
+        resolved.add(requiredName);
+        queue.push(requiredName);
       }
-    } );
+    });
   }
 
   return resolved;
@@ -61,13 +61,8 @@ function resolveAllDependencies( usedComponents, componentMap ) {
  * @param {Set<string>} neededComponents - Set of component names to include
  * @returns {Array<Object>} - Filtered array of component objects
  */
-function filterNeededComponents( allComponents, neededComponents ) {
-  return allComponents.filter( component =>
-    neededComponents.has( component.name )
-  );
+function filterNeededComponents(allComponents, neededComponents) {
+  return allComponents.filter((component) => neededComponents.has(component.name));
 }
 
-export {
-  resolveAllDependencies,
-  filterNeededComponents
-};
+export { resolveAllDependencies, filterNeededComponents };

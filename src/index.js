@@ -38,10 +38,10 @@ import { getManifest } from './utils/component-helpers.js';
  * @param {Options} [options] - Plugin options
  * @returns {import('metalsmith').Plugin} - Metalsmith plugin function
  */
-function bundledComponents( options = {} ) {
+function bundledComponents(options = {}) {
   // PHASE 1: Configuration - Normalize options once at plugin registration time
   // This runs only once when .use(bundledComponents(options)) is called
-  options = normalizeOptions( options );
+  options = normalizeOptions(options);
 
   /**
    * PHASE 2: Execution - The actual plugin function that processes files
@@ -51,208 +51,209 @@ function bundledComponents( options = {} ) {
    * @param {import('metalsmith').Metalsmith} metalsmith - Metalsmith instance
    * @param {Function} done - Callback function for async completion
    */
-  function plugin( files, metalsmith, done ) {
-    const debug = metalsmith.debug( 'metalsmith-bundled-components' );
-    debug( 'Running with options: %O', options );
+  function plugin(files, metalsmith, done) {
+    const debug = metalsmith.debug('metalsmith-bundled-components');
+    debug('Running with options: %O', options);
 
     async function processComponents() {
-        /*
-         * Component Discovery
-         */
-        // Use metalsmith.path() for consistent cross-platform path handling
-        const basePath = metalsmith.path( options.basePath );
-        const sectionsPath = metalsmith.path( options.sectionsPath );
-        const layoutPath = metalsmith.path( options.layoutsPath );
+      /*
+       * Component Discovery
+       */
+      // Use metalsmith.path() for consistent cross-platform path handling
+      const basePath = metalsmith.path(options.basePath);
+      const sectionsPath = metalsmith.path(options.sectionsPath);
+      const layoutPath = metalsmith.path(options.layoutsPath);
 
-        // Scans lib folder for all available components in
-        // _partials and sections folders
-        const allBaseComponents = collectComponents( basePath );
-        const allSectionComponents = collectComponents( sectionsPath );
-        const allComponents = [ ...allBaseComponents, ...allSectionComponents ];
+      // Scans lib folder for all available components in
+      // _partials and sections folders
+      const allBaseComponents = collectComponents(basePath);
+      const allSectionComponents = collectComponents(sectionsPath);
+      const allComponents = [...allBaseComponents, ...allSectionComponents];
 
-        debug( 'Partials path: %s', basePath );
-        debug( 'Sections path: %s', sectionsPath );
-        debug( 'Found all partials: %O', allBaseComponents.map( c => c.name ) );
-        debug( 'Found all sections: %O', allSectionComponents.map( c => c.name ) );
+      debug('Partials path: %s', basePath);
+      debug('Sections path: %s', sectionsPath);
+      debug(
+        'Found all partials: %O',
+        allBaseComponents.map((c) => c.name)
+      );
+      debug(
+        'Found all sections: %O',
+        allSectionComponents.map((c) => c.name)
+      );
 
-        // Fail fast if no components found - this indicates a configuration error
-        if ( allComponents.length === 0 ) {
-          const error = new Error(
-            `No components found in specified directories.
-  - basePath: ${ options.basePath }
-  - sectionsPath: ${ options.sectionsPath }
+      // Fail fast if no components found - this indicates a configuration error
+      if (allComponents.length === 0) {
+        const error = new Error(
+          `No components found in specified directories.
+  - basePath: ${options.basePath}
+  - sectionsPath: ${options.sectionsPath}
 
 This likely indicates a configuration error. Please verify:
   1. Component directories exist and contain components
   2. Paths are correct relative to project root
   3. Component folders follow expected structure (component-name/component-name.njk)`
-          );
-          throw error;
-        }
-
-        /*
-         * Template Analysis - Tree Shaking
-         * Detect which components are actually used in templates
-         * (from page frontmatter, template content, and layout files)
-         */
-
-        // Extract directory names from paths, for example 'lib/components/_partials' → '_partials'
-        const componentDirs = [
-          path.basename( options.basePath ),
-          path.basename( options.sectionsPath )
-        ];
-
-        // Scan all templates and layout files that are actually used
-        const usedComponents = detectUsedComponents( files, componentDirs, layoutPath );
-        debug( 'All components used (pages + layouts): %O', [ ...usedComponents ] );
-
-        // Create component map for available components
-        const componentMap = createComponentMap( allComponents );
-        debug( 'Component map created with %d available components', componentMap.size );
-
-        /*
-         * Resolve transitive dependencies
-         */
-        const neededComponents = resolveAllDependencies( usedComponents, componentMap );
-        debug( 'Components needed (including dependencies): %O', [ ...neededComponents ] );
-
-        // Filter to only needed components
-        const baseComponents = filterNeededComponents( allBaseComponents, neededComponents );
-        const sectionComponents = filterNeededComponents( allSectionComponents, neededComponents );
-
-        debug( 'Filtered partials to bundle: %O', baseComponents.map( c => c.name ) );
-        debug( 'Filtered sections to bundle: %O', sectionComponents.map( c => c.name ) );
-
-        /*
-         * Validate section data if validation is enabled
-         * Validates component data from page frontmatter against validation schemas 
-         * defined in component manifest files.
-         */
-        if ( options.validation.enabled ) {
-          debug( 'Validating section data...' );
-
-          const allValidationErrors = [];
-
-          // Only validate content files (HTML/Markdown) that might contain sections 
-          // frontmatter. Skip assets like images, CSS, JS files.
-          Object.keys( files )
-            .filter( fileName =>
-              fileName.endsWith( '.html' ) ||
-              fileName.endsWith( '.htm' ) ||
-              fileName.endsWith( '.md' ) ||
-              fileName.endsWith( '.markdown' )
-            )
-            .forEach( fileName => {
-              const file = files[ fileName ];
-              const { contents, sections } = file;
-
-              // Validate file.contents is a Buffer
-              if ( contents && !Buffer.isBuffer( contents ) ) {
-                debug( 'Warning: file.contents is not a Buffer for %s', fileName );
-              }
-
-              // Collect all validation errors across all files. Allows reporting
-              // multiple errors at once rather than failing on the first error.
-              if ( sections && Array.isArray( sections ) ) {
-                const fileErrors = validateSections( sections, ( sectionType ) => getManifest( componentMap, sectionType ), fileName );
-                allValidationErrors.push( ...fileErrors );
-              }
-            } );
-
-          // Handle validation errors
-          if ( allValidationErrors.length > 0 ) {
-            const errorMessage = `Section Validation Errors:\n\n${ allValidationErrors.map( error => `  ${ error.message }` ).join( '\n\n' ) }`;
-
-            console.error( errorMessage );
-
-            if ( options.validation.strict ) {
-              throw new Error( 'Section validation failed' );
-            } else {
-              console.warn( '\nValidation errors found but continuing build (strict mode disabled)' );
-              debug( 'Validation errors: %O', allValidationErrors );
-            }
-          } else {
-            debug( 'All sections validated successfully' );
-          }
-        }
-
-        // Validate all required components exist (replaces complex dependency ordering)
-        const requirementErrors = validateRequirements( componentMap );
-
-        if ( requirementErrors.length > 0 ) {
-          console.error( 'Component requirement errors found:' );
-          requirementErrors.forEach( error => console.error( `  - ${ error }` ) );
-          throw new Error( 'Component requirement validation failed' );
-        }
-
-        /*
-         * Simple build order: base → sections (in filesystem discovery order)
-         * No dependency resolution needed since components are namespaced (CSS)
-         * and wrapped in IIFEs (JS), so load order doesn't affect functionality
-         */
-        const buildOrder = [
-          ...baseComponents.map( c => c.name ),
-          ...sectionComponents.map( c => c.name )
-        ];
-        debug( 'Build order: %s', buildOrder.join( ' → ' ) );
-
-        // PostCSS is handled via esbuild plugin
-        if ( options.postcss && options.postcss.enabled ) {
-          debug( 'PostCSS processing enabled with %d plugins', options.postcss.plugins?.length || 0 );
-        }
-
-        /*
-         * Bundle components and main entries using esbuild with plugins
-         * Process in order: main entries → base components → section components
-         */
-        debug( 'Starting bundling process...' );
-        const bundledAssets = await bundleWithESBuild(
-          baseComponents,
-          sectionComponents,
-          metalsmith.directory(),
-          options
         );
-        debug( 'Bundled assets completed: %O', {
-          hasCss: !!bundledAssets.css,
-          hasJs: !!bundledAssets.js
-        } );
+        throw error;
+      }
 
-        // Add bundled CSS (main + components) to Metalsmith files object
-        // Instead of writing files directly to disk with fs.writeFileSync(),
-        //  add them to the files object. Metalsmith then:
-        // - Handles the actual writing to disk
-        // - Allows other plugins to process these files further
-        if ( bundledAssets.css ) {
-          files[ options.cssDest ] = {
-            contents: Buffer.isBuffer( bundledAssets.css )
-              ? bundledAssets.css
-              : Buffer.from( bundledAssets.css, 'utf8' )
-          };
+      /*
+       * Template Analysis - Tree Shaking
+       * Detect which components are actually used in templates
+       * (from page frontmatter, template content, and layout files)
+       */
 
-          debug( `Added bundled CSS to ${ options.cssDest }` );
+      // Extract directory names from paths, for example 'lib/components/_partials' → '_partials'
+      const componentDirs = [path.basename(options.basePath), path.basename(options.sectionsPath)];
+
+      // Scan all templates and layout files that are actually used
+      const usedComponents = detectUsedComponents(files, componentDirs, layoutPath);
+      debug('All components used (pages + layouts): %O', [...usedComponents]);
+
+      // Create component map for available components
+      const componentMap = createComponentMap(allComponents);
+      debug('Component map created with %d available components', componentMap.size);
+
+      /*
+       * Resolve transitive dependencies
+       */
+      const neededComponents = resolveAllDependencies(usedComponents, componentMap);
+      debug('Components needed (including dependencies): %O', [...neededComponents]);
+
+      // Filter to only needed components
+      const baseComponents = filterNeededComponents(allBaseComponents, neededComponents);
+      const sectionComponents = filterNeededComponents(allSectionComponents, neededComponents);
+
+      debug(
+        'Filtered partials to bundle: %O',
+        baseComponents.map((c) => c.name)
+      );
+      debug(
+        'Filtered sections to bundle: %O',
+        sectionComponents.map((c) => c.name)
+      );
+
+      /*
+       * Validate section data if validation is enabled
+       * Validates component data from page frontmatter against validation schemas
+       * defined in component manifest files.
+       */
+      if (options.validation.enabled) {
+        debug('Validating section data...');
+
+        const allValidationErrors = [];
+
+        // Only validate content files (HTML/Markdown) that might contain sections
+        // frontmatter. Skip assets like images, CSS, JS files.
+        Object.keys(files)
+          .filter(
+            (fileName) =>
+              fileName.endsWith('.html') ||
+              fileName.endsWith('.htm') ||
+              fileName.endsWith('.md') ||
+              fileName.endsWith('.markdown')
+          )
+          .forEach((fileName) => {
+            const file = files[fileName];
+            const { contents, sections } = file;
+
+            // Validate file.contents is a Buffer
+            if (contents && !Buffer.isBuffer(contents)) {
+              debug('Warning: file.contents is not a Buffer for %s', fileName);
+            }
+
+            // Collect all validation errors across all files. Allows reporting
+            // multiple errors at once rather than failing on the first error.
+            if (sections && Array.isArray(sections)) {
+              const fileErrors = validateSections(
+                sections,
+                (sectionType) => getManifest(componentMap, sectionType),
+                fileName
+              );
+              allValidationErrors.push(...fileErrors);
+            }
+          });
+
+        // Handle validation errors
+        if (allValidationErrors.length > 0) {
+          const errorMessage = `Section Validation Errors:\n\n${allValidationErrors.map((error) => `  ${error.message}`).join('\n\n')}`;
+
+          console.error(errorMessage);
+
+          if (options.validation.strict) {
+            throw new Error('Section validation failed');
+          } else {
+            console.warn('\nValidation errors found but continuing build (strict mode disabled)');
+            debug('Validation errors: %O', allValidationErrors);
+          }
+        } else {
+          debug('All sections validated successfully');
         }
+      }
 
-        // Add bundled JS (main + components) to Metalsmith files object
-        if ( bundledAssets.js ) {
-          files[ options.jsDest ] = {
-            contents: Buffer.isBuffer( bundledAssets.js )
-              ? bundledAssets.js
-              : Buffer.from( bundledAssets.js, 'utf8' )
-          };
+      // Validate all required components exist (replaces complex dependency ordering)
+      const requirementErrors = validateRequirements(componentMap);
 
-          debug( `Added bundled JS to ${ options.jsDest }` );
-        }
+      if (requirementErrors.length > 0) {
+        console.error('Component requirement errors found:');
+        requirementErrors.forEach((error) => console.error(`  - ${error}`));
+        throw new Error('Component requirement validation failed');
+      }
 
+      /*
+       * Simple build order: base → sections (in filesystem discovery order)
+       * No dependency resolution needed since components are namespaced (CSS)
+       * and wrapped in IIFEs (JS), so load order doesn't affect functionality
+       */
+      const buildOrder = [...baseComponents.map((c) => c.name), ...sectionComponents.map((c) => c.name)];
+      debug('Build order: %s', buildOrder.join(' → '));
+
+      // PostCSS is handled via esbuild plugin
+      if (options.postcss && options.postcss.enabled) {
+        debug('PostCSS processing enabled with %d plugins', options.postcss.plugins?.length || 0);
+      }
+
+      /*
+       * Bundle components and main entries using esbuild with plugins
+       * Process in order: main entries → base components → section components
+       */
+      debug('Starting bundling process...');
+      const bundledAssets = await bundleWithESBuild(baseComponents, sectionComponents, metalsmith.directory(), options);
+      debug('Bundled assets completed: %O', {
+        hasCss: !!bundledAssets.css,
+        hasJs: !!bundledAssets.js
+      });
+
+      // Add bundled CSS (main + components) to Metalsmith files object
+      // Instead of writing files directly to disk with fs.writeFileSync(),
+      //  add them to the files object. Metalsmith then:
+      // - Handles the actual writing to disk
+      // - Allows other plugins to process these files further
+      if (bundledAssets.css) {
+        files[options.cssDest] = {
+          contents: Buffer.isBuffer(bundledAssets.css) ? bundledAssets.css : Buffer.from(bundledAssets.css, 'utf8')
+        };
+
+        debug(`Added bundled CSS to ${options.cssDest}`);
+      }
+
+      // Add bundled JS (main + components) to Metalsmith files object
+      if (bundledAssets.js) {
+        files[options.jsDest] = {
+          contents: Buffer.isBuffer(bundledAssets.js) ? bundledAssets.js : Buffer.from(bundledAssets.js, 'utf8')
+        };
+
+        debug(`Added bundled JS to ${options.jsDest}`);
+      }
     }
 
     // Execute async processing and handle callback
     processComponents()
-      .then( () => done() )
-      .catch( error => done( error ) );
+      .then(() => done())
+      .catch((error) => done(error));
   }
 
   // Set function name for better debugging
-  Object.defineProperty( plugin, 'name', { value: 'bundledComponents' } );
+  Object.defineProperty(plugin, 'name', { value: 'bundledComponents' });
 
   return plugin;
 }

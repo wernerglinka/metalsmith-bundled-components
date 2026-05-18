@@ -1,13 +1,13 @@
 import assert from 'node:assert';
 import bundledComponents from '../../src/index.js';
 
-describe( 'Plugin Options', () => {
-  it( 'should accept default options', () => {
+describe('Plugin Options', () => {
+  it('should accept default options', () => {
     const pluginInstance = bundledComponents();
-    assert.strictEqual( typeof pluginInstance, 'function' );
-  } );
+    assert.strictEqual(typeof pluginInstance, 'function');
+  });
 
-  it( 'should accept custom options', () => {
+  it('should accept custom options', () => {
     const customOptions = {
       basePath: 'custom/base/path',
       sectionsPath: 'custom/sections/path',
@@ -15,11 +15,11 @@ describe( 'Plugin Options', () => {
       jsDest: 'custom/js/path.js'
     };
 
-    const pluginInstance = bundledComponents( customOptions );
-    assert.strictEqual( typeof pluginInstance, 'function' );
-  } );
+    const pluginInstance = bundledComponents(customOptions);
+    assert.strictEqual(typeof pluginInstance, 'function');
+  });
 
-  it( 'should accept PostCSS configuration', () => {
+  it('should accept PostCSS configuration', () => {
     const customOptions = {
       postcss: {
         enabled: true,
@@ -28,11 +28,11 @@ describe( 'Plugin Options', () => {
       }
     };
 
-    const pluginInstance = bundledComponents( customOptions );
-    assert.strictEqual( typeof pluginInstance, 'function' );
-  } );
+    const pluginInstance = bundledComponents(customOptions);
+    assert.strictEqual(typeof pluginInstance, 'function');
+  });
 
-  it( 'should merge partial options with defaults', () => {
+  it('should merge partial options with defaults', () => {
     // We can't easily test the internal state of options after normalization,
     // but we can verify that the plugin doesn't crash with partial options
 
@@ -41,7 +41,7 @@ describe( 'Plugin Options', () => {
       // Other options should be defaulted
     };
 
-    const pluginInstance = bundledComponents( partialOptions );
-    assert.strictEqual( typeof pluginInstance, 'function' );
-  } );
-} );
+    const pluginInstance = bundledComponents(partialOptions);
+    assert.strictEqual(typeof pluginInstance, 'function');
+  });
+});

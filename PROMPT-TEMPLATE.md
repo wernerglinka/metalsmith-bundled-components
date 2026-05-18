@@ -159,7 +159,7 @@ The provided workflow will handle running tests, calculating coverage, and updat
 
 ### User-Oriented Examples
 
-```
+````
 Add comprehensive examples in the README.md that show:
 - Basic usage with default options
 - Common customization scenarios
@@ -194,8 +194,9 @@ Metalsmith(__dirname)
     if (err) throw err;
     console.log('Build complete!');
   });
-```
-```
+````
+
+````
 
 ## Example Implementations to Reference
 
@@ -235,14 +236,14 @@ function normalizeOptions(options) {
  */
 
 /**
- * Main plugin function 
+ * Main plugin function
  * @param {Options} options - Plugin options
  * @returns {import('metalsmith').Plugin} Metalsmith plugin function
  */
 function myPlugin(options = {}) {
   // Plugin implementation
 }
-```
+````
 
 Refer to these plugin patterns for guidance:
 
@@ -252,7 +253,7 @@ Refer to these plugin patterns for guidance:
 // Two-phase plugin pattern
 const plugin = (options = {}) => {
   // Normalize options
-  const opts = { 
+  const opts = {
     defaultOption: 'default',
     ...options
   };
@@ -266,11 +267,11 @@ const plugin = (options = {}) => {
     Object.keys(files).forEach((file) => {
       // File filtering logic
       if (!file.endsWith('.html')) return;
-      
+
       // File processing logic
       const data = files[file];
       // Modify data or contents
-      
+
       debug(`Processed file: ${file}`);
     });
 
@@ -294,31 +295,31 @@ export default plugin;
 // Pattern for plugins that collect and add metadata
 const plugin = (options = {}) => {
   // Options normalization
-  const opts = { 
+  const opts = {
     metadataKey: 'collected',
     ...options
   };
 
   return (files, metalsmith, done) => {
     const debug = metalsmith.debug('metalsmith-metadata-plugin');
-    
+
     // Create collection
     const collection = [];
-    
+
     // Process files
     Object.keys(files).forEach((file) => {
       // Collection logic
       collection.push({
-        path: file,
+        path: file
         // Other properties
       });
     });
-    
+
     // Add to metadata
     const metadata = metalsmith.metadata();
     metadata[opts.metadataKey] = collection;
     metalsmith.metadata(metadata);
-    
+
     done();
   };
 };

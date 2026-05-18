@@ -41,6 +41,7 @@ update-deps .
 ### Common Mistakes to AVOID
 
 **❌ Wrong Approach:**
+
 - Creating custom CLAUDE.md content instead of using `get-template plugin/CLAUDE.md`
 - Scaffolding entire new plugins when you just need a template
 - Making up template content or "simplifying" official templates
@@ -48,6 +49,7 @@ update-deps .
 - Using commands like `npx metalsmith-plugin-mcp-server scaffold ./ CLAUDE.md claude-context`
 
 **✅ Correct Approach:**
+
 - Use `list-templates` to see what's available
 - Use `get-template <template-name>` to get exact content
 - Follow validation recommendations exactly as provided
@@ -57,6 +59,7 @@ update-deps .
 ### Quick Commands
 
 **Quality & Validation:**
+
 ```bash
 npx metalsmith-plugin-mcp-server validate . --functional  # Validate with MCP server
 npm test                                                   # Run tests with coverage
@@ -64,6 +67,7 @@ npm run lint                                              # Lint and fix code
 ```
 
 **Release Process:**
+
 ```bash
 npm run release:patch   # Bug fixes (1.2.3 → 1.2.4)
 npm run release:minor   # New features (1.2.3 → 1.3.0)
@@ -71,11 +75,11 @@ npm run release:major   # Breaking changes (1.2.3 → 2.0.0)
 ```
 
 **Development:**
+
 ```bash
 npm run build          # Build ESM/CJS versions
 npm run test:coverage  # Run tests with detailed coverage
 ```
-
 
 ## metalsmith-bundled-components
 
@@ -104,7 +108,7 @@ npm run test:unit
 npm run test:esm
 
 # Run CommonJS tests only
-npm run test:cjs 
+npm run test:cjs
 
 # Run tests with coverage reporting
 npm run coverage
@@ -150,17 +154,19 @@ The plugin implements an intelligent workflow that optimizes bundle sizes throug
 The plugin automatically analyzes your pages to determine which components are actually used, resulting in optimal bundle sizes:
 
 **How it works:**
+
 1. Scans page frontmatter for `sections` arrays containing `sectionType` declarations
 2. Follows component dependency chains via `requires` arrays in manifests
 3. Only bundles components that are used (directly or transitively)
 
 **Example:**
+
 ```yaml
 ---
 sections:
   - sectionType: hero
     text:
-      title: "Welcome"
+      title: 'Welcome'
 ---
 ```
 
@@ -192,17 +198,14 @@ The plugin uses a simplified approach that works because components are namespac
 
 ```javascript
 // Simple filesystem discovery order within groups
-const sortedComponents = [
-  ...baseComponents,
-  ...sectionComponents
-];
+const sortedComponents = [...baseComponents, ...sectionComponents];
 
 // Basic requirement validation (no complex dependency resolution)
 function validateRequirements(componentMap) {
   const errors = [];
   componentMap.forEach((component) => {
     const requirements = component.requires || component.dependencies || [];
-    requirements.forEach(required => {
+    requirements.forEach((required) => {
       if (!componentMap.has(required)) {
         errors.push(`Component "${component.name}" requires "${required}" which was not found`);
       }
@@ -230,6 +233,7 @@ Key test fixtures:
 5. **production-mode** - Tests minification functionality
 
 Key test areas:
+
 - **Integration tests** - PostCSS @import resolution, production minification
 - **Unit tests** - Component discovery, options validation, requirement validation
 - **Real-world scenarios** - Based on actual testbed project analysis
@@ -237,7 +241,7 @@ Key test areas:
 When updating tests, ensure that:
 
 1. Changes to bundling logic include tests for esbuild output format
-2. New options have corresponding test cases  
+2. New options have corresponding test cases
 3. Error cases are tested (especially requirement validation)
 4. PostCSS integration and @import resolution tests work correctly
 5. Complete minification is tested for both CSS and JS
@@ -276,7 +280,7 @@ function runPlugin(files, options = {}) {
   return new Promise((resolve, reject) => {
     const metalsmith = Metalsmith(fixture('validation'));
     const plugin = bundledComponents(options);
-    
+
     // Plugin receives files directly - this is the standard pattern
     plugin(files, metalsmith, (error) => {
       if (error) reject(error);
@@ -286,7 +290,7 @@ function runPlugin(files, options = {}) {
 }
 
 // ❌ WRONG - Don't add files to metadata
-Object.keys(files).forEach(filename => {
+Object.keys(files).forEach((filename) => {
   metalsmith.metadata()[filename] = files[filename]; // This is wrong!
 });
 ```
@@ -298,8 +302,9 @@ Object.keys(files).forEach(filename => {
 - **Don't mix them** - Files go to the plugin function, metadata is for global config
 
 Real Metalsmith instances provide:
+
 - Proper API methods like `metalsmith.directory()`
-- Correct behavior and error handling  
+- Correct behavior and error handling
 - Real-world testing scenarios
 - Future compatibility with Metalsmith updates
 
