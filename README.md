@@ -6,7 +6,6 @@ A Metalsmith plugin that automatically discovers and bundles CSS and JavaScript 
 [![npm: version][npm-badge]][npm-url]
 [![license: MIT][license-badge]][license-url]
 [![coverage][coverage-badge]][coverage-url]
-[![ESM/CommonJS][modules-badge]][npm-url]
 [![AI-assisted development](https://img.shields.io/badge/AI-assisted-blue)](https://github.com/wernerglinka/metalsmith-bundled-components/blob/main/CLAUDE.md)
 
 > This Metalsmith plugin is under active development. The API is stable, but breaking changes may occur before reaching 1.0.0.
@@ -24,15 +23,15 @@ A Metalsmith plugin that automatically discovers and bundles CSS and JavaScript 
 - **Component validation** - Validates component properties to prevent silent failures
 - **Tree shaking** - Removes unused code for smaller bundles
 - **Convention over configuration** - Sensible defaults with minimal required setup
-- **ESM and CommonJS support**:
-  - ESM: `import bundledComponents from 'metalsmith-bundled-components'`
-  - CommonJS: `const bundledComponents = require('metalsmith-bundled-components')`
 
 ## Installation
 
 ```bash
 npm install metalsmith-bundled-components
 ```
+
+This plugin is published as ESM only and requires Node.js 22 or newer. CommonJS
+consumers should pin to the 0.10.x line.
 
 ## Usage
 
@@ -450,7 +449,7 @@ Metalsmith(__dirname).use(
 
 ## Test Coverage
 
-This plugin is tested using mocha with c8 for code coverage.
+This plugin is tested with Node's native `node:test` runner and `--experimental-test-coverage`.
 
 ## Debug
 
@@ -505,4 +504,3 @@ All AI-assisted code has been reviewed and tested to ensure it meets project sta
 [license-url]: LICENSE
 [coverage-badge]: https://img.shields.io/badge/test%20coverage-0%25-red
 [coverage-url]: #test-coverage
-[modules-badge]: https://img.shields.io/badge/modules-ESM%2FCJS-blue

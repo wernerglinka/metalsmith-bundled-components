@@ -45,42 +45,29 @@ This Metalsmith plugin automatically discovers and bundles CSS and JavaScript fi
 # Install dependencies
 npm install
 
-# Build the project (ESM and CommonJS formats)
-npm run build
-
-# Run all tests
+# Run all tests (node:test runner)
 npm run test
 
 # Run only unit tests
 npm run test:unit
 
-# Run ESM tests only
-npm run test:esm
-
-# Run CommonJS tests only
-npm run test:cjs
-
-# Run tests with coverage reporting
+# Run tests with coverage (native --experimental-test-coverage)
 npm run coverage
 
-# Format code with Prettier
+# Lint + format (Biome, one tool)
+npm run lint
+npm run lint:check
 npm run format
-
-# Check code format without modifying
 npm run format:check
 
-# Lint code with ESLint
-npm run lint
-
-# Check for linting issues without fixing
-npm run lint:check
-
-# Prepare a release
+# Dry-run a release
 npm run release:check
 
-# Create a release
-npm run release
+# Cut a release
+npm run release:patch   # or :minor / :major
 ```
+
+This plugin is ESM-only and ships src/ directly — no build step.
 
 ## Code Architecture
 
@@ -169,9 +156,8 @@ function validateRequirements(componentMap) {
 
 Tests are organized as:
 
-- `test/index.js` - Main ESM tests
-- `test/cjs.test.cjs` - CommonJS integration tests
-- `test/unit/*.js` - Unit tests for specific functionality
+- `test/index.test.js` - Main integration tests
+- `test/unit/*.test.js` - Unit tests for specific functionality
 - `test/fixtures/` - Test fixtures for integration testing
 
 Key test fixtures:
@@ -201,7 +187,7 @@ When updating tests, ensure that:
 
 This plugin follows Werner Glinka's Metalsmith plugin standards:
 
-- ESM and CommonJS dual module support
+- ESM-only publishing (1.0.0+); the 0.x line shipped a dual ESM/CJS build
 - Standard options normalization pattern
 - Consistent error handling
 - Debug logging support
