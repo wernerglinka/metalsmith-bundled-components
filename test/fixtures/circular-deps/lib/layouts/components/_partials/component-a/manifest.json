@@ -1,0 +1,6 @@
+{
+  "name": "component-a",
+  "type": "partial",
+  "styles": ["component-a.css"],
+  "dependencies": ["component-b"]
+}

@@ -1,8 +1,8 @@
 # Dependency directories
 node_modules/
 
-# Build outputs
-lib/
+# Build outputs (root only — must not match test/fixtures/*/lib/)
+/lib/
 
 # Coverage directory
 coverage/

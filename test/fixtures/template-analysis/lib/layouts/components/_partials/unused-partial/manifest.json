@@ -1,0 +1,7 @@
+{
+  "name": "unused-partial",
+  "type": "partial",
+  "styles": ["unused-partial.css"],
+  "scripts": ["unused-partial.js"],
+  "requires": []
+}

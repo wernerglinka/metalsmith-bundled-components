@@ -1,0 +1,10 @@
+:root {
+  --font-primary: 'Helvetica Neue', sans-serif;
+  --font-h1: 2.5rem;
+  --line-height: 1.6;
+  --space-sm: 1rem;
+  --space-lg: 2rem;
+  --color-primary: #3498db;
+  --color-secondary: #2c3e50;
+  --color-text: #333;
+}

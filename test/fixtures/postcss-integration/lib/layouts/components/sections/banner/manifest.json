@@ -1,0 +1,6 @@
+{
+  "name": "banner",
+  "type": "section", 
+  "styles": ["banner.css"],
+  "requires": ["text"]
+}

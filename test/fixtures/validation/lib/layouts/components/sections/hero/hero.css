@@ -1,0 +1,8 @@
+.hero {
+  padding: 2rem;
+  background: var(--primary-color);
+}
+
+.hero--reverse {
+  flex-direction: row-reverse;
+}

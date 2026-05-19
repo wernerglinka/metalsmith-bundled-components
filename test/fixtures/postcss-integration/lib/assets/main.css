@@ -1,0 +1,9 @@
+@import './styles/_design-tokens.css';
+@import './styles/_base.css';
+
+/* Main application styles */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-sm);
+}

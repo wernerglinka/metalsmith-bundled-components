@@ -1,0 +1,7 @@
+{
+  "name": "unused-section",
+  "type": "section",
+  "styles": ["unused-section.css"],
+  "scripts": ["unused-section.js"],
+  "requires": []
+}

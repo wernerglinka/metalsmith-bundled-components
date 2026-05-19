@@ -1,0 +1,14 @@
+{
+  "name": "gallery",
+  "version": "1.0.0",
+  "description": "Image gallery with lightbox",
+  "styles": ["gallery.css"],
+  "scripts": ["gallery.js"],
+  "requires": ["modal"],
+  "properties": {
+    "images": {
+      "type": "array",
+      "required": true
+    }
+  }
+}

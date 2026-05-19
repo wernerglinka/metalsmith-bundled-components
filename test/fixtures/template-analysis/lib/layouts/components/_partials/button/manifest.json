@@ -1,0 +1,7 @@
+{
+  "name": "button",
+  "type": "partial",
+  "styles": ["button.css"],
+  "scripts": ["button.js"],
+  "requires": ["icon"]
+}

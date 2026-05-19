@@ -1,0 +1,8 @@
+{
+  "name": "dependent",
+  "type": "section",
+  "description": "Dependent component that requires base",
+  "styles": ["dependent.css"],
+  "scripts": ["dependent.js"],
+  "dependencies": ["base"]
+}

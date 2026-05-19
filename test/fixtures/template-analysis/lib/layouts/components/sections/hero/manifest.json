@@ -1,0 +1,7 @@
+{
+  "name": "hero",
+  "type": "section",
+  "styles": ["hero.css"],
+  "scripts": ["hero.js"],
+  "requires": ["button"]
+}

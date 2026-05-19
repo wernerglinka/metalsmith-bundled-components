@@ -1,0 +1,7 @@
+{
+  "name": "icon",
+  "type": "partial",
+  "styles": ["icon.css"],
+  "scripts": ["icon.js"],
+  "requires": []
+}

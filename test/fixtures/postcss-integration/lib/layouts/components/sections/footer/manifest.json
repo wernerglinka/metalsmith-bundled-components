@@ -1,0 +1,5 @@
+{
+  "name": "footer",
+  "type": "section",
+  "styles": ["footer.css"]
+}

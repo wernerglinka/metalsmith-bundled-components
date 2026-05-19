@@ -1,0 +1,4 @@
+.text {
+  font-family: var(--font-primary);
+  line-height: var(--line-height);
+}

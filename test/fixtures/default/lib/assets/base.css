@@ -1,0 +1,11 @@
+/* Base styles that can be imported */
+.base-reset {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.base-typography {
+  font-family: 'Helvetica Neue', sans-serif;
+  line-height: 1.6;
+}

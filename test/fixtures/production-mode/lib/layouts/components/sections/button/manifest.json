@@ -1,0 +1,6 @@
+{
+  "name": "button-section",
+  "type": "section",
+  "styles": ["button.css"],
+  "requires": ["button"]
+}

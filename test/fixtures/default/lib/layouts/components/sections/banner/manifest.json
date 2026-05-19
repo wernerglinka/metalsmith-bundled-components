@@ -1,0 +1,8 @@
+{
+  "name": "banner",
+  "type": "section",
+  "description": "Banner section with heading and CTA button",
+  "styles": ["banner.css"],
+  "scripts": ["banner.js"],
+  "dependencies": ["button"]
+}

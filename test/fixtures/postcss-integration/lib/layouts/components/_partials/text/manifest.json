@@ -1,0 +1,5 @@
+{
+  "name": "text",
+  "type": "partial",
+  "styles": ["text.css"]
+}

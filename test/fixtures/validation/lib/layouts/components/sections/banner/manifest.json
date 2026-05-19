@@ -1,0 +1,23 @@
+{
+  "name": "banner",
+  "type": "section",
+  "styles": ["banner.css"],
+  "scripts": [],
+  "dependencies": [],
+  "validation": {
+    "properties": {
+      "sectionType": {
+        "type": "string",
+        "const": "banner"
+      },
+      "text.titleTag": {
+        "type": "string",
+        "enum": ["h1", "h2", "h3", "h4", "h5", "h6"]
+      },
+      "buttonStyle": {
+        "type": "string",
+        "enum": ["primary", "secondary", "ghost"]
+      }
+    }
+  }
+}
