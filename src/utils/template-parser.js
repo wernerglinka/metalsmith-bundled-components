@@ -6,8 +6,8 @@
  * unused components for optimal bundle sizes.
  */
 
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 /**
  * Regular expression to match Nunjucks import statements
@@ -63,25 +63,18 @@ function extractComponentName(importPath, componentDirs) {
  */
 function parseTemplateFile(fileContent, componentDirs) {
   const importedComponents = new Set();
-  let match;
 
   // Check {% from "..." import ... %} statements
-  IMPORT_PATTERN.lastIndex = 0;
-  while ((match = IMPORT_PATTERN.exec(fileContent)) !== null) {
-    const importPath = match[1];
-    const componentName = extractComponentName(importPath, componentDirs);
-
+  for (const match of fileContent.matchAll(IMPORT_PATTERN)) {
+    const componentName = extractComponentName(match[1], componentDirs);
     if (componentName) {
       importedComponents.add(componentName);
     }
   }
 
   // Check {% include "..." %} statements
-  INCLUDE_PATTERN.lastIndex = 0;
-  while ((match = INCLUDE_PATTERN.exec(fileContent)) !== null) {
-    const includePath = match[1];
-    const componentName = extractComponentName(includePath, componentDirs);
-
+  for (const match of fileContent.matchAll(INCLUDE_PATTERN)) {
+    const componentName = extractComponentName(match[1], componentDirs);
     if (componentName) {
       importedComponents.add(componentName);
     }
@@ -106,7 +99,9 @@ function collectSectionTypes(value, result) {
   }
 
   if (Array.isArray(value)) {
-    value.forEach((item) => collectSectionTypes(item, result));
+    value.forEach((item) => {
+      collectSectionTypes(item, result);
+    });
     return;
   }
 
@@ -114,7 +109,9 @@ function collectSectionTypes(value, result) {
     result.add(value.sectionType);
   }
 
-  Object.values(value).forEach((child) => collectSectionTypes(child, result));
+  Object.values(value).forEach((child) => {
+    collectSectionTypes(child, result);
+  });
 }
 
 /**
@@ -157,13 +154,17 @@ function detectUsedComponents(files, componentDirs, layoutDir) {
 
     // Parse Nunjucks imports and add components to the set
     const fileComponents = parseTemplateFile(content, componentDirs);
-    fileComponents.forEach((component) => allUsedComponents.add(component));
+    fileComponents.forEach((component) => {
+      allUsedComponents.add(component);
+    });
   });
 
   // Also scan layout files if layoutDir is provided
   if (layoutDir) {
     const layoutComponents = scanLayoutFiles(layoutDir, componentDirs);
-    layoutComponents.forEach((component) => allUsedComponents.add(component));
+    layoutComponents.forEach((component) => {
+      allUsedComponents.add(component);
+    });
   }
 
   return allUsedComponents;
@@ -197,7 +198,9 @@ function scanLayoutFiles(layoutDir, componentDirs) {
         try {
           const content = fs.readFileSync(fullPath, 'utf8');
           const fileComponents = parseTemplateFile(content, componentDirs);
-          fileComponents.forEach((comp) => components.add(comp));
+          fileComponents.forEach((comp) => {
+            components.add(comp);
+          });
         } catch {
           // Silently skip files that can't be read
         }
@@ -209,4 +212,4 @@ function scanLayoutFiles(layoutDir, componentDirs) {
   return components;
 }
 
-export { detectUsedComponents, parseTemplateFile, extractComponentName, scanLayoutFiles, collectSectionTypes };
+export { collectSectionTypes, detectUsedComponents, extractComponentName, parseTemplateFile, scanLayoutFiles };

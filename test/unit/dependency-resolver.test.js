@@ -1,5 +1,5 @@
-import { strict as assert } from 'assert';
-import { resolveAllDependencies, filterNeededComponents } from '../../src/utils/dependency-resolver.js';
+import { strict as assert } from 'node:assert';
+import { filterNeededComponents, resolveAllDependencies } from '../../src/utils/dependency-resolver.js';
 
 describe('Dependency Resolver', () => {
   describe('resolveAllDependencies()', () => {

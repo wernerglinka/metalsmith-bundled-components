@@ -2,84 +2,34 @@
 
 ## MCP Server Integration (CRITICAL)
 
-**IMPORTANT**: This plugin was created with `metalsmith-plugin-mcp-server`. When working on this plugin, AI assistants (Claude) MUST use the MCP server tools rather than creating their own implementations.
+**IMPORTANT**: This plugin was created with `metalsmith-plugin-mcp-server`.
+When working on this plugin, AI assistants (Claude) MUST use the MCP server
+tools rather than improvising equivalents.
 
 ### Essential MCP Commands
 
 ```bash
-# List all available templates
-list-templates
-
-# Get specific template content (use these exactly as provided)
-get-template plugin/CLAUDE.md
+list-templates                          # See what's available
+get-template plugin/CLAUDE.md           # Retrieve exact template content
+get-template configs/biome.json
 get-template configs/release-it.json
-get-template configs/eslint.config.js
-
-# Validate plugin and get actionable recommendations
-validate .
-
-# Generate configuration files
-configs .
-
-# Show recommended configuration templates
-show-template release-it
-show-template eslint
-
-# Update dependencies
-update-deps .
+validate .                              # Plugin validation + recommendations
+diff-template .                         # Drift check vs current scaffold
+configs .                               # Generate config files
+show-template release-it                # Reference config templates
+update-deps .                           # Dependency update
 ```
 
 ### CRITICAL RULES for AI Assistants
 
-1. **ALWAYS use MCP server templates verbatim** - Never create simplified versions
-2. **ALWAYS use `list-templates` first** to see what's available
-3. **ALWAYS use `get-template`** to retrieve exact template content
-4. **NEVER improvise or create custom implementations** when MCP server provides templates
-5. **When validation recommends templates**, use the exact commands provided
-6. **If a command seems unclear**, ask the user for clarification rather than improvising
-
-### Common Mistakes to AVOID
-
-**❌ Wrong Approach:**
-
-- Creating custom CLAUDE.md content instead of using `get-template plugin/CLAUDE.md`
-- Scaffolding entire new plugins when you just need a template
-- Making up template content or "simplifying" official templates
-- Ignoring validation recommendations
-- Using commands like `npx metalsmith-plugin-mcp-server scaffold ./ CLAUDE.md claude-context`
-
-**✅ Correct Approach:**
-
-- Use `list-templates` to see what's available
-- Use `get-template <template-name>` to get exact content
-- Follow validation recommendations exactly as provided
-- Ask for clarification when commands seem confusing
-- Always use official templates verbatim
-
-### Quick Commands
-
-**Quality & Validation:**
-
-```bash
-npx metalsmith-plugin-mcp-server validate . --functional  # Validate with MCP server
-npm test                                                   # Run tests with coverage
-npm run lint                                              # Lint and fix code
-```
-
-**Release Process:**
-
-```bash
-npm run release:patch   # Bug fixes (1.2.3 → 1.2.4)
-npm run release:minor   # New features (1.2.3 → 1.3.0)
-npm run release:major   # Breaking changes (1.2.3 → 2.0.0)
-```
-
-**Development:**
-
-```bash
-npm run build          # Build ESM/CJS versions
-npm run test:coverage  # Run tests with detailed coverage
-```
+1. **Use MCP server templates verbatim** — never paraphrase or "simplify"
+2. **Run `list-templates` before guessing** at template names
+3. **When `validate` produces a recommendation, copy it exactly** — including
+   the exact command suggested
+4. **Ask the user** before modifying `.release-it.json`, `package.json`,
+   `biome.json`, or any other `.json` / `.yml` / `.config.js` file
+5. **Never set `npm.publish` to `true`** in `.release-it.json` — releases
+   here are deliberately manual
 
 ## metalsmith-bundled-components
 
@@ -309,6 +259,10 @@ Real Metalsmith instances provide:
 - Future compatibility with Metalsmith updates
 
 ## Release Process
+
+**Before releasing**, review `README.md` to ensure options tables, examples,
+defaults, and any version-specific notes still match the current code. The
+release automation does not check this.
 
 This plugin uses the automated release process with GitHub CLI integration. The process is fully automated and handles:
 

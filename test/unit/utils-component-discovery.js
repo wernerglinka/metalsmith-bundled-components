@@ -1,11 +1,11 @@
 import assert from 'node:assert';
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import {
-  collectComponents,
-  loadComponent,
   autoGenerateManifest,
-  createComponentMap
+  collectComponents,
+  createComponentMap,
+  loadComponent
 } from '../../src/utils/component-discovery.js';
 
 describe('Utils - Component Discovery', () => {

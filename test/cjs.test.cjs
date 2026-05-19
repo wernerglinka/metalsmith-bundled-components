@@ -8,16 +8,18 @@ function fixture(p) {
 }
 
 // Test CommonJS integration
-describe('metalsmith-bundled-components (CommonJS)', function () {
-  it('should export a function', function () {
+describe('metalsmith-bundled-components (CommonJS)', () => {
+  it('should export a function', () => {
     assert.strictEqual(typeof bundledComponents, 'function');
   });
-  
-  it('should work with CommonJS require', function (done) {
+
+  it('should work with CommonJS require', (done) => {
     Metalsmith(fixture('default'))
       .use(bundledComponents())
-      .build(function (err) {
-        if (err) done(err);
+      .build((err) => {
+        if (err) {
+          done(err);
+        }
         assert.strictEqual(err, null);
         done();
       });

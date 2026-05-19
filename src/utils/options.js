@@ -69,4 +69,4 @@ function normalizeOptions(options) {
   return normalized;
 }
 
-export { normalizeOptions, defaults };
+export { defaults, normalizeOptions };

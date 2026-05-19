@@ -1,15 +1,15 @@
 import assert from 'node:assert';
 import {
+  generateTip,
   getNestedProperty,
-  setNestedProperty,
   hasNestedProperty,
-  validateProperty,
-  validateSection,
-  validateSections,
+  setNestedProperty,
   validateObjectProperties,
-  validateRequiredProperties,
   validatePatternConstraint,
-  generateTip
+  validateProperty,
+  validateRequiredProperties,
+  validateSection,
+  validateSections
 } from '../../src/utils/validation.js';
 
 describe('Utils - Validation', () => {

@@ -1,5 +1,5 @@
 import assert from 'node:assert';
-import { normalizeOptions, defaults } from '../../src/utils/options.js';
+import { defaults, normalizeOptions } from '../../src/utils/options.js';
 
 describe('Utils - Options', () => {
   it('should export defaults', () => {

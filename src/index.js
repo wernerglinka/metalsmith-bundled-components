@@ -1,12 +1,12 @@
-import path from 'path';
-import { normalizeOptions } from './utils/options.js';
-import { collectComponents, createComponentMap } from './utils/component-discovery.js';
-import { validateRequirements } from './utils/requirement-validator.js';
+import path from 'node:path';
 import { bundleWithESBuild } from './processors/esbuild-processor.js';
-import { validateSections } from './utils/validation.js';
-import { detectUsedComponents } from './utils/template-parser.js';
-import { resolveAllDependencies, filterNeededComponents } from './utils/dependency-resolver.js';
+import { collectComponents, createComponentMap } from './utils/component-discovery.js';
 import { getManifest } from './utils/component-helpers.js';
+import { filterNeededComponents, resolveAllDependencies } from './utils/dependency-resolver.js';
+import { normalizeOptions } from './utils/options.js';
+import { validateRequirements } from './utils/requirement-validator.js';
+import { detectUsedComponents } from './utils/template-parser.js';
+import { validateSections } from './utils/validation.js';
 
 /**
  * @typedef {Object} BundledAssets
@@ -195,7 +195,9 @@ This likely indicates a configuration error. Please verify:
 
       if (requirementErrors.length > 0) {
         console.error('Component requirement errors found:');
-        requirementErrors.forEach((error) => console.error(`  - ${error}`));
+        requirementErrors.forEach((error) => {
+          console.error(`  - ${error}`);
+        });
         throw new Error('Component requirement validation failed');
       }
 
@@ -208,7 +210,7 @@ This likely indicates a configuration error. Please verify:
       debug('Build order: %s', buildOrder.join(' → '));
 
       // PostCSS is handled via esbuild plugin
-      if (options.postcss && options.postcss.enabled) {
+      if (options.postcss?.enabled) {
         debug('PostCSS processing enabled with %d plugins', options.postcss.plugins?.length || 0);
       }
 

@@ -1,6 +1,6 @@
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { build } from 'esbuild';
 import postcssPlugin from 'esbuild-plugin-postcss';
 
@@ -78,7 +78,7 @@ async function bundleWithESBuild(baseComponents, sectionComponents, projectRoot,
   const plugins = [];
 
   // Add PostCSS plugin if configured
-  if (options.postcss && options.postcss.enabled) {
+  if (options.postcss?.enabled) {
     plugins.push(
       postcssPlugin.default({
         plugins: options.postcss.plugins || [],

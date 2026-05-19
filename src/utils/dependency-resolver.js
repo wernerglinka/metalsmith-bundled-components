@@ -65,4 +65,4 @@ function filterNeededComponents(allComponents, neededComponents) {
   return allComponents.filter((component) => neededComponents.has(component.name));
 }
 
-export { resolveAllDependencies, filterNeededComponents };
+export { filterNeededComponents, resolveAllDependencies };

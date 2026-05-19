@@ -1,6 +1,6 @@
 import assert from 'node:assert';
-import { resolve, dirname, join } from 'node:path';
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import equals from 'assert-dir-equal';
 import Metalsmith from 'metalsmith';

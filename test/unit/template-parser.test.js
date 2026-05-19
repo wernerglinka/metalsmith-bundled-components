@@ -1,9 +1,9 @@
-import { strict as assert } from 'assert';
+import { strict as assert } from 'node:assert';
 import {
-  extractComponentName,
-  parseTemplateFile,
+  collectSectionTypes,
   detectUsedComponents,
-  collectSectionTypes
+  extractComponentName,
+  parseTemplateFile
 } from '../../src/utils/template-parser.js';
 
 describe('Template Parser', () => {

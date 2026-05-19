@@ -1,5 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 
 /**
  * @typedef {Object} ComponentManifest
@@ -172,4 +172,4 @@ function createComponentMap(components) {
   return componentMap;
 }
 
-export { collectComponents, loadComponent, autoGenerateManifest, createComponentMap };
+export { autoGenerateManifest, collectComponents, createComponentMap, loadComponent };

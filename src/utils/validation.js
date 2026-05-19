@@ -107,12 +107,12 @@ function generateTip(value, rule) {
   }
 
   // String number when number expected
-  if (rule.type === 'number' && typeof value === 'string' && !isNaN(Number(value))) {
+  if (rule.type === 'number' && typeof value === 'string' && !Number.isNaN(Number(value))) {
     return `String "${value}" should be a number. Remove quotes: ${value}`;
   }
 
   // Common misspellings for titleTag
-  if (rule.enum && rule.enum.includes('h1') && typeof value === 'string') {
+  if (rule.enum?.includes('h1') && typeof value === 'string') {
     const commonMisspellings = {
       header: 'h1, h2, h3, h4, h5, or h6',
       heading: 'h1, h2, h3, h4, h5, or h6',
@@ -408,7 +408,7 @@ function validateSections(sections, getManifest, fileName = '') {
 
     try {
       const manifest = getManifest(sectionType);
-      if (!manifest || !manifest.validation) {
+      if (!manifest?.validation) {
         return; // No validation rules for this component
       }
 
@@ -437,18 +437,18 @@ function validateSections(sections, getManifest, fileName = '') {
 }
 
 export {
+  generateTip,
   getNestedProperty,
-  setNestedProperty,
   hasNestedProperty,
-  validateProperty,
-  validateSection,
-  validateSections,
-  validateObjectProperties,
-  validateRequiredProperties,
-  validateTypeConstraint,
+  setNestedProperty,
+  validateArrayItems,
   validateConstConstraint,
   validateEnumConstraint,
+  validateObjectProperties,
   validatePatternConstraint,
-  validateArrayItems,
-  generateTip
+  validateProperty,
+  validateRequiredProperties,
+  validateSection,
+  validateSections,
+  validateTypeConstraint
 };
