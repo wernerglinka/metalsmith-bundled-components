@@ -51,9 +51,7 @@
     "@biomejs/biome": "^2.4.12",
     "assert-dir-equal": "^1.1.0",
     "auto-changelog": "^2.5.0",
-    "c8": "^11.0.0",
     "microbundle": "^0.15.1",
-    "mocha": "^11.7.5",
     "release-it": "^19.2.4"
   },
   "peerDependencies": {
@@ -62,7 +60,7 @@
   "scripts": {
     "build": "microbundle --entry src/index.js --output lib/index.js --target node -f esm,cjs --strict --generateTypes=false",
     "changelog": "auto-changelog -u --commit-limit false --ignore-commit-pattern '^((dev|chore|ci):|Release)'",
-    "coverage": "c8 --include=src/**/*.js --reporter=lcov --reporter=text-summary mocha 'test/index.js' 'test/cjs.test.cjs' 'test/unit/**/*.js' -t 5000",
+    "coverage": "mkdir -p coverage && node --test --experimental-test-coverage --test-coverage-exclude='test/**' --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info --test-timeout=15000 'test/**/*.test.js'",
     "format": "biome format --write .",
     "format:check": "biome format .",
     "lint": "biome check --write .",
@@ -72,11 +70,8 @@
     "release:minor": "./scripts/release.sh minor --ci",
     "release:major": "./scripts/release.sh major --ci",
     "release:check": "npm run lint:check && npm run build && release-it --dry-run",
-    "test": "c8 --include=src/**/*.js mocha 'test/index.js' 'test/cjs.test.cjs' 'test/unit/**/*.js' -t 15000",
-    "test:coverage": "c8 npm test",
-    "test:unit": "mocha 'test/unit/**/*.js' -t 5000",
-    "test:esm": "c8 --include=src/**/*.js mocha test/index.js -t 15000",
-    "test:cjs": "c8 --include=src/**/*.js mocha test/cjs.test.cjs -t 15000",
+    "test": "node --test --test-timeout=15000 'test/**/*.test.js'",
+    "test:unit": "node --test --test-timeout=5000 'test/unit/**/*.test.js'",
     "audit": "npm audit"
   },
   "engines": {

@@ -1,4 +1,5 @@
 import assert from 'node:assert';
+import { describe, it } from 'node:test';
 import { defaults, normalizeOptions } from '../../src/utils/options.js';
 
 describe('Utils - Options', () => {

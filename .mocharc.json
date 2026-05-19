@@ -1,6 +1,0 @@
-{
-  "extension": ["js"],
-  "node-option": ["experimental-specifier-resolution=node"],
-  "timeout": 5000,
-  "recursive": true
-}

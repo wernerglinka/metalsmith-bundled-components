@@ -1,5 +1,6 @@
 import assert from 'node:assert';
 import { dirname, resolve } from 'node:path';
+import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import Metalsmith from 'metalsmith';
 import bundledComponents from '../../src/index.js';

@@ -1,6 +1,7 @@
 import assert from 'node:assert';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
+import { describe, it } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import equals from 'assert-dir-equal';
 import Metalsmith from 'metalsmith';
@@ -53,7 +54,7 @@ describe('metalsmith-bundled-components', () => {
     assert.strictEqual(bundledComponents.name, 'bundledComponents');
   });
 
-  it('should not crash the metalsmith build when using default options', (done) => {
+  it('should not crash the metalsmith build when using default options', (_t, done) => {
     Metalsmith(fixture('default'))
       .use(bundledComponents())
       .build((err) => {
@@ -74,7 +75,7 @@ describe('metalsmith-bundled-components', () => {
       });
   });
 
-  it('should generate bundled CSS and JS files with custom paths', (done) => {
+  it('should generate bundled CSS and JS files with custom paths', (_t, done) => {
     Metalsmith(fixture('custom-paths'))
       .use(
         bundledComponents({
@@ -104,7 +105,7 @@ describe('metalsmith-bundled-components', () => {
   });
 
   // Test requirement validation
-  it('should report missing required components', (done) => {
+  it('should report missing required components', (_t, done) => {
     // Note: circular-deps fixture has components with missing requirements
     // We'll reuse it to test requirement validation
     Metalsmith(fixture('missing-requirements'))
@@ -117,7 +118,7 @@ describe('metalsmith-bundled-components', () => {
   });
 
   // Test PostCSS integration with import resolution
-  it('should process CSS @imports with PostCSS when postcss option is enabled', (done) => {
+  it('should process CSS @imports with PostCSS when postcss option is enabled', (_t, done) => {
     const postcssImport = async () => {
       // Mock postcss-import plugin functionality
       return {
@@ -167,7 +168,7 @@ describe('metalsmith-bundled-components', () => {
   });
 
   // Test production mode with minification using default fixture
-  it('should minify output when minifyOutput option is enabled', (done) => {
+  it('should minify output when minifyOutput option is enabled', (_t, done) => {
     Metalsmith(fixture('default'))
       .use(
         bundledComponents({
@@ -206,7 +207,7 @@ describe('metalsmith-bundled-components', () => {
       });
   });
 
-  it('should bundle JavaScript files with ES module imports', (done) => {
+  it('should bundle JavaScript files with ES module imports', (_t, done) => {
     const ms = Metalsmith(fixture('js-imports'))
       .source('./src')
       .destination('./build')
@@ -259,7 +260,7 @@ describe('metalsmith-bundled-components', () => {
     });
   });
 
-  it('should only bundle components used in templates (template analysis)', (done) => {
+  it('should only bundle components used in templates (template analysis)', (_t, done) => {
     const ms = Metalsmith(fixture('template-analysis'))
       .source('./src')
       .destination('./build')
