@@ -15,27 +15,17 @@
     "tree-shaking",
     "static-site"
   ],
-  "main": "./lib/index.cjs",
-  "module": "./lib/index.js",
   "type": "module",
-  "exports": {
-    "import": "./lib/index.js",
-    "require": "./lib/index.cjs",
-    "default": "./lib/index.js"
-  },
+  "exports": "./src/index.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/wernerglinka/metalsmith-bundled-components.git"
   },
   "files": [
-    "lib",
+    "src",
     "README.md",
     "LICENSE"
   ],
-  "directories": {
-    "lib": "lib",
-    "test": "test"
-  },
   "author": "Werner Glinka <werner@glinka.co>",
   "license": "MIT",
   "bugs": {
@@ -51,25 +41,22 @@
     "@biomejs/biome": "^2.4.12",
     "assert-dir-equal": "^1.1.0",
     "auto-changelog": "^2.5.0",
-    "microbundle": "^0.15.1",
     "release-it": "^19.2.4"
   },
   "peerDependencies": {
     "metalsmith": "^2.5.0"
   },
   "scripts": {
-    "build": "microbundle --entry src/index.js --output lib/index.js --target node -f esm,cjs --strict --generateTypes=false",
     "changelog": "auto-changelog -u --commit-limit false --ignore-commit-pattern '^((dev|chore|ci):|Release)'",
     "coverage": "mkdir -p coverage && node --test --experimental-test-coverage --test-coverage-exclude='test/**' --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info --test-timeout=15000 'test/**/*.test.js'",
     "format": "biome format --write .",
     "format:check": "biome format .",
     "lint": "biome check --write .",
     "lint:check": "biome check .",
-    "prepare": "npm run build",
     "release:patch": "./scripts/release.sh patch --ci",
     "release:minor": "./scripts/release.sh minor --ci",
     "release:major": "./scripts/release.sh major --ci",
-    "release:check": "npm run lint:check && npm run build && release-it --dry-run",
+    "release:check": "npm run lint:check && release-it --dry-run",
     "test": "node --test --test-timeout=15000 'test/**/*.test.js'",
     "test:unit": "node --test --test-timeout=5000 'test/unit/**/*.test.js'",
     "audit": "npm audit"
