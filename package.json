@@ -43,9 +43,9 @@
   },
   "homepage": "https://github.com/wernerglinka/metalsmith-bundled-components#readme",
   "dependencies": {
-    "esbuild": "^0.28.0",
-    "esbuild-plugin-postcss": "^0.3.0",
-    "postcss": "^8.5.8"
+    "esbuild": "0.28.0",
+    "esbuild-plugin-postcss": "0.3.0",
+    "postcss": "8.5.8"
   },
   "devDependencies": {
     "assert-dir-equal": "^1.1.0",
@@ -83,7 +83,7 @@
     "audit": "npm audit"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=22.0.0"
   },
   "publishConfig": {
     "access": "public"
