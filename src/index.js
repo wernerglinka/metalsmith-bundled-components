@@ -5,6 +5,7 @@ import { getManifest } from './utils/component-helpers.js';
 import { filterNeededComponents, resolveAllDependencies } from './utils/dependency-resolver.js';
 import { normalizeOptions } from './utils/options.js';
 import { validateRequirements } from './utils/requirement-validator.js';
+import { buildComponentsSchema } from './utils/schema-emitter.js';
 import { detectUsedComponents } from './utils/template-parser.js';
 import { validateSections } from './utils/validation.js';
 
@@ -199,6 +200,27 @@ This likely indicates a configuration error. Please verify:
           console.error(`  - ${error}`);
         });
         throw new Error('Component requirement validation failed');
+      }
+
+      /*
+       * Emit the composed editor schema if requested.
+       *
+       * Surfaces the resolved field tree for every section (with `$use`
+       * references expanded against partials) so an external editor can
+       * render forms without re-implementing composition. Built from all
+       * section components, not the tree-shaken set, because the editor
+       * needs the full authoring palette regardless of what this build uses.
+       */
+      if (options.schema.enabled) {
+        const componentsSchema = buildComponentsSchema(allSectionComponents, componentMap);
+        files[options.schema.dest] = {
+          contents: Buffer.from(`${JSON.stringify(componentsSchema, null, 2)}\n`, 'utf8')
+        };
+        debug(
+          'Emitted components schema to %s (%d sections)',
+          options.schema.dest,
+          Object.keys(componentsSchema).length
+        );
       }
 
       /*

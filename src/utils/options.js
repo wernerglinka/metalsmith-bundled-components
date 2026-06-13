@@ -13,6 +13,12 @@
  */
 
 /**
+ * @typedef {Object} SchemaOptions
+ * @property {boolean} [enabled] - Emit the composed editor schema as a build artifact
+ * @property {string} [dest] - Output path for the emitted schema JSON
+ */
+
+/**
  * @typedef {Object} BundledComponentsOptions
  * @property {string} [basePath] - Path to base/partial components directory
  * @property {string} [sectionsPath] - Path to section components directory
@@ -24,6 +30,7 @@
  * @property {boolean} [minifyOutput] - Enable esbuild minification for production
  * @property {PostCSSConfiguration} [postcss] - PostCSS configuration via esbuild plugin
  * @property {ValidationOptions} [validation] - Component property validation settings
+ * @property {SchemaOptions} [schema] - Editor schema emit settings
  */
 
 /** @type {BundledComponentsOptions} */
@@ -45,6 +52,10 @@ const defaults = {
     enabled: true, // Component property validation
     strict: false, // Warn vs fail on validation errors
     reportAllErrors: true // Report all errors vs stop on first
+  },
+  schema: {
+    enabled: false, // Off by default; opt-in so existing consumers are unaffected
+    dest: 'assets/components-schema.json' // Output path for the composed editor schema
   }
 };
 
@@ -65,6 +76,9 @@ function normalizeOptions(options) {
 
   // Ensure validation configuration has all required properties
   normalized.validation = { ...defaults.validation, ...(normalized.validation || {}) };
+
+  // Ensure schema configuration has all required properties
+  normalized.schema = { ...defaults.schema, ...(normalized.schema || {}) };
 
   return normalized;
 }
