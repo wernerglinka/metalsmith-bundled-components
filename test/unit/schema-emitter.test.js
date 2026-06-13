@@ -88,12 +88,63 @@ describe('Schema Emitter', () => {
       assert.throws(() => resolveFields({ x: { $use: 'missing' } }, new Map()), /unknown component "missing"/);
     });
 
-    it('throws on a circular $use reference', () => {
+    it('throws on a circular reference', () => {
       const componentMap = new Map([
         ['a', { name: 'a', fields: { b: { $use: 'b' } } }],
         ['b', { name: 'b', fields: { a: { $use: 'a' } } }]
       ]);
-      assert.throws(() => resolveFields({ start: { $use: 'a' } }, componentMap), /Circular \$use reference/);
+      assert.throws(() => resolveFields({ start: { $use: 'a' } }, componentMap), /Circular reference/);
+    });
+
+    it('resolves a $use whose target fields are a single array field', () => {
+      const componentMap = new Map([
+        [
+          'ctas',
+          {
+            name: 'ctas',
+            fields: {
+              widget: 'array',
+              label: 'Call to action buttons',
+              items: { url: { widget: 'text', label: 'URL', default: '' } }
+            }
+          }
+        ]
+      ]);
+      const result = resolveFields({ ctas: { $use: 'ctas' } }, componentMap);
+      assert.equal(result.ctas.widget, 'array');
+      assert.equal(result.ctas.items.url.widget, 'text');
+    });
+
+    it('spreads $extends partials into the current level', () => {
+      const componentMap = new Map([
+        [
+          'commons',
+          {
+            name: 'commons',
+            fields: {
+              isDisabled: { widget: 'checkbox', label: 'Disable section', default: false },
+              containerFields: {
+                inContainer: { widget: 'checkbox', label: 'Constrain width', default: true }
+              }
+            }
+          }
+        ]
+      ]);
+      const result = resolveFields(
+        {
+          title: { widget: 'text', label: 'Title', default: '' },
+          $extends: ['commons']
+        },
+        componentMap
+      );
+      // Own key plus the spread commons keys, all at the same level.
+      assert.deepEqual(Object.keys(result).sort(), ['containerFields', 'isDisabled', 'title']);
+      assert.equal(result.containerFields.inContainer.default, true);
+    });
+
+    it('throws when a $extends target resolves to a leaf instead of a group', () => {
+      const componentMap = new Map([['ctas', { name: 'ctas', fields: { widget: 'array', items: {} } }]]);
+      assert.throws(() => resolveFields({ $extends: ['ctas'] }, componentMap), /must resolve to a field group/);
     });
   });
 
