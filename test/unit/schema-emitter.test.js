@@ -167,5 +167,19 @@ describe('Schema Emitter', () => {
       const schema = buildComponentsSchema([{ name: 'hero' }], new Map());
       assert.deepEqual(schema, {});
     });
+
+    it('skips abstract components even when they declare fields', () => {
+      const componentMap = new Map();
+      const sectionComponents = [
+        {
+          name: 'commons',
+          abstract: true,
+          fields: { isDisabled: { widget: 'checkbox', label: 'Disable', default: false } }
+        },
+        { name: 'banner', fields: { title: { widget: 'text', label: 'Title', default: '' } } }
+      ];
+      const schema = buildComponentsSchema(sectionComponents, componentMap);
+      assert.deepEqual(Object.keys(schema), ['banner']);
+    });
   });
 });

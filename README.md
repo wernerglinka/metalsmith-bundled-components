@@ -397,7 +397,7 @@ So that shared field groups are defined once on a partial and reused, compositio
 
 Here `text`, `image`, and `ctas` are inserted under their keys, while the shared `commons` fields (such as a `containerFields` wrapper) are spread onto the section root. `$use` and `$extends` targets should also appear in `requires`. Unknown references and reference cycles throw a build error; a `$extends` target that resolves to a single leaf field (rather than a group) also throws.
 
-Components without a `fields` block are simply omitted from the schema, so you can migrate components to the format incrementally.
+Components without a `fields` block are simply omitted from the schema, so you can migrate components to the format incrementally. A component that needs a `fields` block only as a shared composition source (referenced by other components via `$use`/`$extends`) but is not an authorable section itself can set `"abstract": true` to stay out of the emitted schema while remaining available for composition.
 
 ## Additional PostCSS Examples
 

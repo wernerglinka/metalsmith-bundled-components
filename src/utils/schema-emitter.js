@@ -149,7 +149,10 @@ function resolveFields(fields, componentMap, seen = new Set()) {
 /**
  * Build the composed editor schema for every section that declares a
  * `fields` block. Sections without one are skipped, so the schema grows as
- * components are migrated to the new format.
+ * components are migrated to the new format. A component marked
+ * `"abstract": true` is also skipped: it may carry a `fields` block as a
+ * shared composition source (referenced via `$use`/`$extends`) without being
+ * an authorable section in its own right.
  *
  * @param {Array<Object>} sectionComponents - Section components (each a spread manifest).
  * @param {Map<string, Object>} componentMap - Map of all components by name.
@@ -158,7 +161,7 @@ function resolveFields(fields, componentMap, seen = new Set()) {
 function buildComponentsSchema(sectionComponents, componentMap) {
   const schema = {};
   for (const section of sectionComponents) {
-    if (!isPlainObject(section.fields)) {
+    if (section.abstract === true || !isPlainObject(section.fields)) {
       continue;
     }
     schema[section.name] = {
