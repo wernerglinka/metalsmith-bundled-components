@@ -21,6 +21,7 @@ A Metalsmith plugin that automatically discovers and bundles CSS and JavaScript 
 - **PostCSS integration** - PostCSS support via esbuild plugins
 - **Simple, predictable ordering** - Main entries → base components → sections (filesystem order)
 - **Component validation** - Validates component properties to prevent silent failures
+- **Editor schema emit** - Optionally emits a composed field schema per section for external editors/form generators
 - **Tree shaking** - Removes unused code for smaller bundles
 - **Convention over configuration** - Sensible defaults with minimal required setup
 
@@ -158,6 +159,7 @@ The resulting bundled CSS will be properly ordered by dependencies, prefixed for
 | `minifyOutput` | Enable esbuild minification for production builds        | `Boolean` | `false`                                                   |
 | `postcss`      | PostCSS configuration (enabled, plugins, options)        | `Object`  | `{ enabled: false, plugins: [], options: {} }`            |
 | `validation`   | Section validation configuration                         | `Object`  | `{ enabled: true, strict: false, reportAllErrors: true }` |
+| `schema`       | Editor schema emit configuration                         | `Object`  | `{ enabled: false, dest: 'assets/components-schema.json' }` |
 
 ## Component Structure
 
@@ -327,6 +329,75 @@ Metalsmith(__dirname)
     if (err) throw err;
   });
 ```
+
+## Editor Schema
+
+For external editors or form generators that author section content, the plugin can emit a single JSON artifact describing every section's fields. The plugin already discovers all components and follows their `requires` graph; with `schema.enabled`, it surfaces the composed result so the editor never has to re-implement component composition.
+
+Enable it in plugin options:
+
+```js
+Metalsmith(__dirname)
+  .use(
+    bundledComponents({
+      schema: {
+        enabled: true, // off by default
+        dest: 'assets/components-schema.json' // where the artifact is written
+      }
+    })
+  )
+  .build((err) => {
+    if (err) throw err;
+  });
+```
+
+The artifact is a map from section name to its fully resolved, nested field tree. It is built from **all** section components, not the tree-shaken set, so an editor always sees the full authoring palette regardless of what a given build uses.
+
+### The `fields` block
+
+Add a `fields` block to a component's `manifest.json` alongside `validation`. It mirrors the data shape your templates render:
+
+- A node with a string `widget` is a **leaf field**. Recognized widgets include `text`, `markdown`, `select`, `checkbox`, and `image` (an editor may define more). A leaf may also carry `label`, `default`, `help`, and the constraint keys `enum`, `required`, and `type`.
+- An **array of objects** uses `widget: "array"` with an `items` field tree describing one entry.
+- Any other object is a **group**; its nesting becomes the field's path in the frontmatter.
+
+```json
+{
+  "name": "text",
+  "type": "partial",
+  "fields": {
+    "title": { "widget": "text", "label": "Title", "default": "" },
+    "titleTag": { "widget": "select", "label": "Title level", "enum": ["h1", "h2", "h3"], "default": "h2" },
+    "prose": { "widget": "markdown", "label": "Body", "default": "" }
+  }
+}
+```
+
+### Composition: `$use` and `$extends`
+
+So that shared field groups are defined once on a partial and reused, composition has two forms:
+
+- **`$use`** inserts a partial's fields **under a named key**. Sibling keys on the same node deep-merge over the inherited fields, letting a section override one inherited field without redefining the group. A partial whose entire `fields` block is a single field (for example a `ctas` partial that is one `widget: "array"` field) also resolves through `$use`.
+- **`$extends`** spreads one or more partials' fields **into the current level** instead of nesting them. Use it for fields that live at the section root and are shared by every section.
+
+```json
+{
+  "name": "banner",
+  "type": "section",
+  "requires": ["ctas", "text", "image", "commons"],
+  "fields": {
+    "isReverse": { "widget": "checkbox", "label": "Reverse layout", "default": false },
+    "text": { "$use": "text" },
+    "image": { "$use": "image" },
+    "ctas": { "$use": "ctas" },
+    "$extends": ["commons"]
+  }
+}
+```
+
+Here `text`, `image`, and `ctas` are inserted under their keys, while the shared `commons` fields (such as a `containerFields` wrapper) are spread onto the section root. `$use` and `$extends` targets should also appear in `requires`. Unknown references and reference cycles throw a build error; a `$extends` target that resolves to a single leaf field (rather than a group) also throws.
+
+Components without a `fields` block are simply omitted from the schema, so you can migrate components to the format incrementally.
 
 ## Additional PostCSS Examples
 
