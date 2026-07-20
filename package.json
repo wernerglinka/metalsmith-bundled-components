@@ -16,7 +16,11 @@
     "static-site"
   ],
   "type": "module",
-  "exports": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./schema": "./src/utils/schema-emitter.js",
+    "./validation": "./src/utils/validation.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/wernerglinka/metalsmith-bundled-components.git"
