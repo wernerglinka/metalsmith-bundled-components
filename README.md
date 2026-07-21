@@ -6,6 +6,7 @@ A Metalsmith plugin that automatically discovers and bundles CSS and JavaScript 
 [![npm: version][npm-badge]][npm-url]
 [![license: MIT][license-badge]][license-url]
 [![coverage][coverage-badge]][coverage-url]
+[![ESM][modules-badge]][npm-url]
 [![AI-assisted development](https://img.shields.io/badge/AI-assisted-blue)](https://github.com/wernerglinka/metalsmith-bundled-components/blob/main/CLAUDE.md)
 
 ## Features
@@ -573,3 +574,4 @@ All AI-assisted code has been reviewed and tested to ensure it meets project sta
 [license-url]: LICENSE
 [coverage-badge]: https://img.shields.io/badge/test%20coverage-96%25-brightgreen
 [coverage-url]: #test-coverage
+[modules-badge]: https://img.shields.io/badge/module-ESM-blue
