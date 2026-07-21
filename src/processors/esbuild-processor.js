@@ -36,6 +36,27 @@ async function bundleWithESBuild(baseComponents, sectionComponents, projectRoot,
   // Create temp directory for bundling operations
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'metalsmith-bundled-'));
 
+  // Remove all temp files/directories created during bundling. Called on both
+  // success and failure so a bundling error never leaks temp files.
+  const cleanup = () => {
+    tempFiles.forEach((tempPath) => {
+      try {
+        if (fs.existsSync(tempPath)) {
+          const stats = fs.statSync(tempPath);
+          if (stats.isDirectory()) {
+            // Remove directory and its contents
+            fs.rmSync(tempPath, { recursive: true, force: true });
+          } else {
+            // Remove file
+            fs.unlinkSync(tempPath);
+          }
+        }
+      } catch {
+        // Silently ignore cleanup errors - they're not critical
+      }
+    });
+  };
+
   // Add main entries first (if specified)
   // If no main entries are specified, will bundle components only
   if (options.mainCSSEntry) {
@@ -160,7 +181,9 @@ async function bundleWithESBuild(baseComponents, sectionComponents, projectRoot,
         // 6. Temp directory cleanup happens at the end of the function
       }
     } catch (error) {
-      console.error('Error bundling CSS:', error.message);
+      // A genuine bundling failure must fail the build, not silently emit no CSS.
+      cleanup();
+      throw new Error(`CSS bundling failed: ${error.message}`, { cause: error });
     }
   }
 
@@ -240,27 +263,14 @@ async function bundleWithESBuild(baseComponents, sectionComponents, projectRoot,
         // Don't clean up here - will clean up all temp files at the end
       }
     } catch (error) {
-      console.error('Error bundling JS:', error.message);
+      // A genuine bundling failure must fail the build, not silently emit no JS.
+      cleanup();
+      throw new Error(`JS bundling failed: ${error.message}`, { cause: error });
     }
   }
 
   // Clean up all temp files and directories at the end
-  tempFiles.forEach((tempPath) => {
-    try {
-      if (fs.existsSync(tempPath)) {
-        const stats = fs.statSync(tempPath);
-        if (stats.isDirectory()) {
-          // Remove directory and its contents
-          fs.rmSync(tempPath, { recursive: true, force: true });
-        } else {
-          // Remove file
-          fs.unlinkSync(tempPath);
-        }
-      }
-    } catch {
-      // Silently ignore cleanup errors - they're not critical
-    }
-  });
+  cleanup();
 
   return {
     css: cssContent,
