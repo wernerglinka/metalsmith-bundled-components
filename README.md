@@ -8,8 +8,6 @@ A Metalsmith plugin that automatically discovers and bundles CSS and JavaScript 
 [![coverage][coverage-badge]][coverage-url]
 [![AI-assisted development](https://img.shields.io/badge/AI-assisted-blue)](https://github.com/wernerglinka/metalsmith-bundled-components/blob/main/CLAUDE.md)
 
-> This Metalsmith plugin is under active development. The API is stable, but breaking changes may occur before reaching 1.0.0.
-
 ## Features
 
 - **Automatic component discovery** - Scans directories for components and their assets

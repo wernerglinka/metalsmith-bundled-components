@@ -372,7 +372,7 @@ export default plugin;
 
 When creating new plugins:
 
-1. **Start with a template**: Use the [Core Plugin](https://github.com/metalsmith/core-plugin) or [Metalsmith Plugin Template](https://github.com/wernerglinka/metalsmith-plugin-template) or use existing plugins as a starting point.
+1. **Scaffold with the MCP server**: Run `npx metalsmith-plugin-mcp-server plugin-scaffold <name> "<description>"` ([metalsmith-plugin-mcp-server](https://github.com/wernerglinka/metalsmith-plugin-mcp-server)), or use the [Core Plugin](https://github.com/metalsmith/core-plugin) or an existing plugin as a starting point.
 
 2. **Extract core patterns**: The two-phase pattern (factory function returning processor) and standardized debug/error handling approach.
 
