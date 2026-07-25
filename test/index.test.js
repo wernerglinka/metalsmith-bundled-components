@@ -307,4 +307,74 @@ describe('metalsmith-bundled-components', () => {
       done();
     });
   });
+
+  describe('cascade layers', () => {
+    it('wraps component CSS in sublayers and appends site overrides', (_t, done) => {
+      Metalsmith(fixture('layers'))
+        .source('src')
+        .destination('build')
+        .clean(true)
+        .use(
+          bundledComponents({
+            layers: { enabled: true }
+          })
+        )
+        .build((err) => {
+          if (err) {
+            done(err);
+            return;
+          }
+
+          const css = readFileSync(fixture('layers/build/assets/main.css'), 'utf8');
+
+          // Order is declared once, before any layered rules
+          assert(css.includes('@layer tokens, base, components, site;'), 'should declare the layer order');
+          assert(
+            css.indexOf('@layer tokens, base, components, site;') < css.indexOf('@layer components.'),
+            'order statement should precede the layered rules'
+          );
+
+          // Each component lands in its own sublayer
+          assert(css.includes('@layer components.banner'), 'banner CSS should be in components.banner');
+          assert(css.includes('@layer components.button'), 'button CSS should be in components.button');
+
+          // The override ships in the site layer, after the component it overrides
+          assert(css.includes('@layer site.banner'), 'override should be in site.banner');
+          assert(css.includes('rebeccapurple'), 'override rules should be in the bundle');
+          assert(
+            css.indexOf('@layer components.banner') < css.indexOf('@layer site.banner'),
+            'override should follow the component it overrides'
+          );
+
+          // A component without an override contributes no site layer
+          assert(!css.includes('@layer site.button'), 'button has no override, so no site.button layer');
+
+          // Hand-authored main CSS is never auto-wrapped
+          assert(css.includes('body'), 'main entry should still be present');
+
+          done();
+        });
+    });
+
+    it('emits no layers at all when the option is off', (_t, done) => {
+      Metalsmith(fixture('layers'))
+        .source('src')
+        .destination('build')
+        .clean(true)
+        .use(bundledComponents({}))
+        .build((err) => {
+          if (err) {
+            done(err);
+            return;
+          }
+
+          const css = readFileSync(fixture('layers/build/assets/main.css'), 'utf8');
+          assert(!css.includes('@layer'), 'no @layer should appear with the default options');
+          assert(!css.includes('rebeccapurple'), 'overrides should not be picked up when layers are off');
+          assert(css.includes('.banner'), 'component CSS should still bundle normally');
+
+          done();
+        });
+    });
+  });
 });

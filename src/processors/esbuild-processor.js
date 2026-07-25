@@ -3,6 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { build } from 'esbuild';
 import postcssPlugin from 'esbuild-plugin-postcss';
+import { collectOverrides, layerOrderStatement, wrapInLayer } from '../utils/css-layers.js';
 
 /**
  * @typedef {Object} BundledAssets
@@ -29,6 +30,11 @@ async function bundleWithESBuild(baseComponents, sectionComponents, projectRoot,
   // Multiple components can reference same utility files (e.g., shared/button.css)
   const cssEntryPoints = new Set();
   const jsEntryPoints = new Set();
+
+  // Which component each CSS file came from, so its rules can be wrapped in a
+  // named sublayer. The main entry is absent from this map: it is hand-authored
+  // CSS and is never auto-wrapped.
+  const cssFileOwner = new Map();
 
   // Track temp files for cleanup at the end
   const tempFiles = [];
@@ -83,6 +89,9 @@ async function bundleWithESBuild(baseComponents, sectionComponents, projectRoot,
       const filePath = path.join(component.path, styleFile);
       if (fs.existsSync(filePath)) {
         cssEntryPoints.add(filePath);
+        if (!cssFileOwner.has(filePath)) {
+          cssFileOwner.set(filePath, component.name);
+        }
       }
     });
 
@@ -118,13 +127,42 @@ async function bundleWithESBuild(baseComponents, sectionComponents, projectRoot,
       for (const cssFile of cssEntryPoints) {
         if (fs.existsSync(cssFile)) {
           const content = fs.readFileSync(cssFile, 'utf8');
-          cssContents.push(content);
+          const owner = cssFileOwner.get(cssFile);
+
+          /*
+           * With layers on, a component's rules go into components.<name> so
+           * a site override in site.<name> beats them regardless of
+           * specificity. The main entry has no owner and is never wrapped:
+           * it is hand-authored CSS and stays as written.
+           */
+          if (options.layers?.enabled && owner) {
+            cssContents.push(wrapInLayer(`${options.layers.componentsLayer}.${owner}`, content));
+          } else {
+            cssContents.push(content);
+          }
+        }
+      }
+
+      /*
+       * Site overrides are appended after every component, each in its own
+       * site.<name> sublayer. They ship only for components this build
+       * actually uses, the same rule canon CSS follows.
+       */
+      if (options.layers?.enabled) {
+        const overrides = collectOverrides([...cssFileOwner.values()], projectRoot, options.layers);
+        for (const override of overrides) {
+          cssContents.push(wrapInLayer(`${options.layers.siteLayer}.${override.name}`, override.css));
         }
       }
 
       if (cssContents.length > 0) {
-        // 1. Concatenate main CSS with all component CSS
-        const combinedCSS = cssContents.join('\n\n');
+        /*
+         * 1. Concatenate main CSS with all component CSS. The layer order
+         *    statement goes first so precedence comes from configuration
+         *    rather than from concatenation order.
+         */
+        const orderStatement = options.layers?.enabled ? layerOrderStatement(options.layers.order) : '';
+        const combinedCSS = [orderStatement, ...cssContents].filter(Boolean).join('\n\n');
 
         // 2. Copy concatenated CSS to temp directory as main.css
         const tempMainCSS = path.join(tempDir, 'main.css');

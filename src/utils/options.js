@@ -19,6 +19,15 @@
  */
 
 /**
+ * @typedef {Object} LayerOptions
+ * @property {boolean} [enabled] - Wrap component CSS in cascade layers and pick up site overrides
+ * @property {string[]} [order] - Layer precedence, lowest first, emitted as the bundle's `@layer` statement
+ * @property {string} [componentsLayer] - Parent layer each component's CSS is nested under
+ * @property {string} [siteLayer] - Parent layer each override file is nested under
+ * @property {string} [overridesPath] - Directory holding per-component override files, relative to the project root
+ */
+
+/**
  * @typedef {Object} BundledComponentsOptions
  * @property {string} [basePath] - Path to base/partial components directory
  * @property {string} [sectionsPath] - Path to section components directory
@@ -31,6 +40,7 @@
  * @property {PostCSSConfiguration} [postcss] - PostCSS configuration via esbuild plugin
  * @property {ValidationOptions} [validation] - Component property validation settings
  * @property {SchemaOptions} [schema] - Editor schema emit settings
+ * @property {LayerOptions} [layers] - Cascade layer wrapping and site override pickup
  */
 
 /** @type {BundledComponentsOptions} */
@@ -56,6 +66,13 @@ const defaults = {
   schema: {
     enabled: false, // Off by default; opt-in so existing consumers are unaffected
     dest: 'assets/components-schema.json' // Output path for the composed editor schema
+  },
+  layers: {
+    enabled: false, // Off by default in 1.x; enabling changes which rules win
+    order: ['tokens', 'base', 'components', 'site'], // Lowest precedence first
+    componentsLayer: 'components', // Component CSS lands in components.<name>
+    siteLayer: 'site', // Override CSS lands in site.<name>
+    overridesPath: 'lib/overrides' // Per-component overrides: <overridesPath>/<name>/<name>.css
   }
 };
 
@@ -79,6 +96,9 @@ function normalizeOptions(options) {
 
   // Ensure schema configuration has all required properties
   normalized.schema = { ...defaults.schema, ...(normalized.schema || {}) };
+
+  // Ensure layer configuration has all required properties
+  normalized.layers = { ...defaults.layers, ...(normalized.layers || {}) };
 
   return normalized;
 }

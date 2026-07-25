@@ -159,6 +159,49 @@ The resulting bundled CSS will be properly ordered by dependencies, prefixed for
 | `postcss`      | PostCSS configuration (enabled, plugins, options)        | `Object`  | `{ enabled: false, plugins: [], options: {} }`            |
 | `validation`   | Section validation configuration                         | `Object`  | `{ enabled: true, strict: false, reportAllErrors: true }` |
 | `schema`       | Editor schema emit configuration                         | `Object`  | `{ enabled: false, dest: 'assets/components-schema.json' }` |
+| `layers`       | Cascade layer wrapping and site override pickup          | `Object`  | `{ enabled: false, order: ['tokens', 'base', 'components', 'site'], componentsLayer: 'components', siteLayer: 'site', overridesPath: 'lib/overrides' }` |
+
+## Cascade Layers and Site Overrides
+
+A site that installs a component and then wants it to look different has two bad options: edit the canon file, which makes the next update a merge, or out-specify it from site CSS, which turns styling into a specificity contest. Cascade layers remove the contest.
+
+With `layers.enabled`, each component's CSS is wrapped in its own sublayer at concat time, and the site's overrides are appended in a later layer:
+
+```js
+.use(
+  bundledComponents({
+    layers: { enabled: true }
+  })
+)
+```
+
+The bundle then looks like this:
+
+```css
+@layer tokens, base, components, site;
+
+/* main.css, exactly as authored */
+
+@layer components.hero {
+  .hero { ... }        /* canon component CSS, untouched on disk */
+}
+
+@layer site.hero {
+  .hero { --hero-gap: var(--space-l); }   /* lib/overrides/hero/hero.css */
+}
+```
+
+Anything in `site` beats anything in `components`, whatever its specificity and wherever it sits in the file. A one-class override wins over a canon rule with three, so overrides stay small and canon component directories stay pristine and re-installable.
+
+**Overrides** live at `<overridesPath>/<name>/<name>.css`, mirroring how components themselves are laid out. They are picked up only for components the build actually uses, so a site that overrides nothing ships nothing extra, and an override for an unused component costs nothing.
+
+**Sublayer names** keep devtools attribution readable: you can see that a rule came from `components.hero` rather than from an anonymous blob of concatenated CSS.
+
+**Only assembled CSS is wrapped.** The main entry is hand-authored and passes through exactly as written, which is where a site declares its own `@layer` blocks if it wants them. A component stylesheet that begins with `@import` or `@charset` is also left unwrapped, since neither is valid inside a layer block; it keeps working, it just does not participate in layer precedence.
+
+The `order` array is emitted as the bundle's `@layer` statement, so precedence comes from configuration rather than from whichever component happened to be concatenated first.
+
+Off by default in 1.x, because turning it on changes which rules win. Expect to spend a little time on rules that previously won by accident.
 
 ## Component Structure
 
