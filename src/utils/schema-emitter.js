@@ -42,6 +42,24 @@ function isPlainObject(value) {
 }
 
 /**
+ * Raised when a `$use`/`$extends` target exists but has not been migrated to
+ * the `fields` format yet. This is a normal state in a site partway through
+ * migration, so it is distinguishable from a genuine authoring error: the
+ * section that referenced it is left out of the schema rather than failing
+ * the build.
+ */
+class UnmigratedReferenceError extends Error {
+  /**
+   * @param {string} ref - Name of the component that has no fields block
+   */
+  constructor(ref) {
+    super(`Reference target "${ref}" has no fields block to compose`);
+    this.name = 'UnmigratedReferenceError';
+    this.ref = ref;
+  }
+}
+
+/**
  * Deep-merge override keys onto a base object. Plain-object values merge
  * recursively; everything else replaces.
  * @param {Object} base
@@ -74,7 +92,7 @@ function resolveRef(ref, componentMap, seen) {
     throw new Error(`Reference to unknown component "${ref}"`);
   }
   if (!isPlainObject(target.fields)) {
-    throw new Error(`Reference target "${ref}" has no fields block to compose`);
+    throw new UnmigratedReferenceError(ref);
   }
   const nextSeen = new Set(seen).add(ref);
   return typeof target.fields.widget === 'string'
@@ -158,16 +176,31 @@ function resolveFields(fields, componentMap, seen = new Set()) {
  * @param {Map<string, Object>} componentMap - Map of all components by name.
  * @returns {Object<string, {name: string, fields: Object}>} Schema keyed by section name.
  */
-function buildComponentsSchema(sectionComponents, componentMap) {
+function buildComponentsSchema(sectionComponents, componentMap, onSkip) {
   const schema = {};
   for (const section of sectionComponents) {
     if (section.abstract === true || !isPlainObject(section.fields)) {
       continue;
     }
-    schema[section.name] = {
-      name: section.name,
-      fields: resolveFields(section.fields, componentMap)
-    };
+    try {
+      schema[section.name] = {
+        name: section.name,
+        fields: resolveFields(section.fields, componentMap)
+      };
+    } catch (error) {
+      /**
+       * A section composing a partial that has no fields block yet is a site
+       * mid-migration, not a broken manifest. Leave the section out and say
+       * why; an incomplete schema is recoverable, a failed build is not.
+       * Every other error is an authoring mistake and still throws.
+       */
+      if (!(error instanceof UnmigratedReferenceError)) {
+        throw error;
+      }
+      if (typeof onSkip === 'function') {
+        onSkip(section.name, error.ref);
+      }
+    }
   }
   return schema;
 }

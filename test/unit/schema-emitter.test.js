@@ -181,5 +181,42 @@ describe('Schema Emitter', () => {
       const schema = buildComponentsSchema(sectionComponents, componentMap);
       assert.deepEqual(Object.keys(schema), ['banner']);
     });
+
+    it('skips a section composing a partial that has no fields block yet', () => {
+      // A site partway through migration: the section was updated, the
+      // partial it composes was not. Incremental migration is the documented
+      // promise, so this must not fail the build.
+      const componentMap = new Map([['text', { name: 'text' }]]);
+      const sectionComponents = [
+        { name: 'banner', fields: { text: { $use: 'text' } } },
+        { name: 'hero', fields: { title: { widget: 'text', label: 'Title', default: '' } } }
+      ];
+      const schema = buildComponentsSchema(sectionComponents, componentMap);
+      assert.deepEqual(Object.keys(schema), ['hero']);
+    });
+
+    it('reports each skipped section and the reference that caused it', () => {
+      const componentMap = new Map([['text', { name: 'text' }]]);
+      const sectionComponents = [{ name: 'banner', fields: { text: { $use: 'text' } } }];
+      const skipped = [];
+      buildComponentsSchema(sectionComponents, componentMap, (section, ref) => {
+        skipped.push([section, ref]);
+      });
+      assert.deepEqual(skipped, [['banner', 'text']]);
+    });
+
+    it('still throws on an unknown reference, which is an authoring error', () => {
+      const sectionComponents = [{ name: 'banner', fields: { text: { $use: 'nope' } } }];
+      assert.throws(() => buildComponentsSchema(sectionComponents, new Map()), /unknown component "nope"/);
+    });
+
+    it('still throws on a circular reference', () => {
+      const componentMap = new Map([
+        ['a', { name: 'a', fields: { b: { $use: 'b' } } }],
+        ['b', { name: 'b', fields: { a: { $use: 'a' } } }]
+      ]);
+      const sectionComponents = [{ name: 'banner', fields: { a: { $use: 'a' } } }];
+      assert.throws(() => buildComponentsSchema(sectionComponents, componentMap), /Circular reference/);
+    });
   });
 });

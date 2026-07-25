@@ -212,7 +212,15 @@ This likely indicates a configuration error. Please verify:
        * needs the full authoring palette regardless of what this build uses.
        */
       if (options.schema.enabled) {
-        const componentsSchema = buildComponentsSchema(allSectionComponents, componentMap);
+        const skipped = [];
+        const componentsSchema = buildComponentsSchema(allSectionComponents, componentMap, (section, ref) => {
+          skipped.push(`${section} (composes "${ref}", which has no fields block)`);
+        });
+        if (skipped.length > 0) {
+          console.warn(
+            `[metalsmith-bundled-components] ${skipped.length} section(s) left out of the editor schema:\n  ${skipped.join('\n  ')}`
+          );
+        }
         files[options.schema.dest] = {
           contents: Buffer.from(`${JSON.stringify(componentsSchema, null, 2)}\n`, 'utf8')
         };
