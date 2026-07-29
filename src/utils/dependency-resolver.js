@@ -4,8 +4,10 @@
  * Given a set of directly used components, this module finds all transitively
  * required components by following the `requires` arrays in component manifests.
  *
- * Since components use IIFEs (JS) and are namespaced (CSS), load order doesn't
- * matter - we just need to ensure all required components are included.
+ * Since components use IIFEs (JS) and are namespaced (CSS), concatenation order
+ * doesn't affect functionality. Cascade layers are the exception: sublayer
+ * precedence follows declaration order, so `sortByDependencyOrder` provides the
+ * order in which component sublayers are declared.
  */
 
 /**
@@ -65,4 +67,56 @@ function filterNeededComponents(allComponents, neededComponents) {
   return allComponents.filter((component) => neededComponents.has(component.name));
 }
 
-export { filterNeededComponents, resolveAllDependencies };
+/**
+ * Sort components so a component's requirements come before the component
+ * itself.
+ *
+ * CSS cascade layers rank sublayers by declaration order, later wins. The
+ * bundler declares component sublayers in this order so a shared base that
+ * everything requires (a `commons` section, say) lands lowest, and every
+ * component building on it can override its rules regardless of specificity
+ * or of where either component's rules sit in the bundle.
+ *
+ * Depth-first with the incoming order as tiebreak, so components without
+ * requirement edges between them keep their discovery order. Requirement
+ * cycles are tolerated: a component already on the active path stays where
+ * the traversal first reached it rather than throwing.
+ *
+ * @param {Array<Object>} components - Component objects with `requires` or legacy `dependencies`
+ * @returns {Array<Object>} New array with dependencies before dependents
+ *
+ * @example
+ * // "artwork" requires "commons"; input order is alphabetical
+ * // Input:  [artwork, commons]
+ * // Output: [commons, artwork]
+ */
+function sortByDependencyOrder(components) {
+  const byName = new Map(components.map((component) => [component.name, component]));
+  const ordered = [];
+  const placed = new Set();
+  const visiting = new Set();
+
+  const visit = (component) => {
+    if (placed.has(component.name) || visiting.has(component.name)) {
+      return;
+    }
+    visiting.add(component.name);
+
+    const requirements = component.requires || component.dependencies || [];
+    requirements.forEach((requiredName) => {
+      const required = byName.get(requiredName);
+      if (required) {
+        visit(required);
+      }
+    });
+
+    visiting.delete(component.name);
+    placed.add(component.name);
+    ordered.push(component);
+  };
+
+  components.forEach(visit);
+  return ordered;
+}
+
+export { filterNeededComponents, resolveAllDependencies, sortByDependencyOrder };

@@ -327,16 +327,46 @@ describe('metalsmith-bundled-components', () => {
 
           const css = readFileSync(fixture('layers/build/assets/main.css'), 'utf8');
 
-          // Order is declared once, before any layered rules
-          assert(css.includes('@layer tokens, base, components, site;'), 'should declare the layer order');
+          /*
+           * Order is declared up front, before any layered rules. esbuild may
+           * merge the consecutive order statements into one, so parse the
+           * first statement and assert on the declared sequence.
+           */
+          const statementMatch = css.match(/@layer ([^{;]+);/);
+          assert(statementMatch, 'should declare the layer order');
           assert(
-            css.indexOf('@layer tokens, base, components, site;') < css.indexOf('@layer components.'),
+            css.indexOf(statementMatch[0]) < css.indexOf('@layer components.banner {'),
             'order statement should precede the layered rules'
           );
+          const declared = statementMatch[1].split(',').map((name) => name.trim());
+          const position = (name) => {
+            const index = declared.indexOf(name);
+            assert(index !== -1, `layer order should declare ${name}`);
+            return index;
+          };
+          assert(position('tokens') < position('base'), 'tokens should rank below base');
+          assert(position('base') < position('components'), 'base should rank below components');
+          assert(position('components') < position('site'), 'components should rank below site');
+
+          // Component sublayers are declared in dependency order: "alert"
+          // requires "banner" and sorts before it alphabetically, yet banner
+          // must be declared first so alert can override its rules.
+          assert(
+            position('components.button') < position('components.banner'),
+            'button should be declared below banner, which requires it'
+          );
+          assert(
+            position('components.banner') < position('components.alert'),
+            'banner should be declared below alert despite sorting after it'
+          );
+
+          // Site override sublayers get the same up-front declaration
+          assert(declared.includes('site.banner'), 'should declare the site sublayers that ship overrides');
 
           // Each component lands in its own sublayer
-          assert(css.includes('@layer components.banner'), 'banner CSS should be in components.banner');
-          assert(css.includes('@layer components.button'), 'button CSS should be in components.button');
+          assert(css.includes('@layer components.banner {'), 'banner CSS should be in components.banner');
+          assert(css.includes('@layer components.button {'), 'button CSS should be in components.button');
+          assert(css.includes('@layer components.alert {'), 'alert CSS should be in components.alert');
 
           // The override ships in the site layer, after the component it overrides
           assert(css.includes('@layer site.banner'), 'override should be in site.banner');

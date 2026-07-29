@@ -74,6 +74,23 @@ function layerOrderStatement(order) {
 }
 
 /**
+ * The `@layer` statement fixing precedence of sublayers within a parent layer.
+ *
+ * Without it, sublayers rank by first appearance in the bundle, which is
+ * concatenation order — an accident of the alphabet that let a shared base
+ * component sorted late (like `commons`) beat the components that build on
+ * it. Declaring the sublayers up front, in dependency order, makes a
+ * component always win over what it requires.
+ *
+ * @param {string} parentLayer - Parent layer name, e.g. "components"
+ * @param {string[]} names - Sublayer names, lowest precedence first
+ * @returns {string} The statement, or an empty string when there is nothing to declare
+ */
+function sublayerOrderStatement(parentLayer, names) {
+  return names && names.length > 0 ? `@layer ${names.map((name) => `${parentLayer}.${name}`).join(', ')};` : '';
+}
+
+/**
  * Find a component's override file.
  *
  * The convention is one directory per component, mirroring how components
@@ -118,4 +135,4 @@ function collectOverrides(componentNames, projectRoot, layers) {
   return found;
 }
 
-export { collectOverrides, findOverride, isWrappable, layerOrderStatement, wrapInLayer };
+export { collectOverrides, findOverride, isWrappable, layerOrderStatement, sublayerOrderStatement, wrapInLayer };

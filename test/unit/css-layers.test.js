@@ -14,6 +14,7 @@ import {
   findOverride,
   isWrappable,
   layerOrderStatement,
+  sublayerOrderStatement,
   wrapInLayer
 } from '../../src/utils/css-layers.js';
 
@@ -74,6 +75,20 @@ describe('CSS Layers', () => {
     it('emits nothing for an empty order', () => {
       assert.equal(layerOrderStatement([]), '');
       assert.equal(layerOrderStatement(undefined), '');
+    });
+  });
+
+  describe('sublayerOrderStatement()', () => {
+    it('qualifies each name with the parent layer, lowest precedence first', () => {
+      assert.equal(
+        sublayerOrderStatement('components', ['commons', 'text', 'artwork']),
+        '@layer components.commons, components.text, components.artwork;'
+      );
+    });
+
+    it('emits nothing when there are no sublayers to declare', () => {
+      assert.equal(sublayerOrderStatement('components', []), '');
+      assert.equal(sublayerOrderStatement('components', undefined), '');
     });
   });
 

@@ -1,0 +1,4 @@
+/* Overrides a banner rule; must win even though "alert" sorts before "banner" */
+.alert.banner {
+  display: block;
+}

@@ -1,0 +1,8 @@
+{
+  "name": "alert",
+  "type": "section",
+  "description": "Alert section that builds on banner; sorts alphabetically before it",
+  "styles": ["alert.css"],
+  "scripts": [],
+  "dependencies": ["banner"]
+}

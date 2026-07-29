@@ -3,7 +3,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { build } from 'esbuild';
 import postcssPlugin from 'esbuild-plugin-postcss';
-import { collectOverrides, layerOrderStatement, wrapInLayer } from '../utils/css-layers.js';
+import { collectOverrides, layerOrderStatement, sublayerOrderStatement, wrapInLayer } from '../utils/css-layers.js';
+import { sortByDependencyOrder } from '../utils/dependency-resolver.js';
 
 /**
  * @typedef {Object} BundledAssets
@@ -144,12 +145,26 @@ async function bundleWithESBuild(baseComponents, sectionComponents, projectRoot,
       }
 
       /*
+       * Sublayers rank by declaration order, so components are declared in
+       * dependency order: a component's requirements come first and rank
+       * lower. A shared base every section requires (a `commons` section)
+       * lands lowest and any component that builds on it can override its
+       * rules, no matter how the component names happen to sort.
+       */
+      const bundledNames = new Set(cssFileOwner.values());
+      const orderedNames = sortByDependencyOrder(allComponents)
+        .map((component) => component.name)
+        .filter((name) => bundledNames.has(name));
+
+      /*
        * Site overrides are appended after every component, each in its own
        * site.<name> sublayer. They ship only for components this build
        * actually uses, the same rule canon CSS follows.
        */
+      let overrideNames = [];
       if (options.layers?.enabled) {
-        const overrides = collectOverrides([...cssFileOwner.values()], projectRoot, options.layers);
+        const overrides = collectOverrides(orderedNames, projectRoot, options.layers);
+        overrideNames = overrides.map((override) => override.name);
         for (const override of overrides) {
           cssContents.push(wrapInLayer(`${options.layers.siteLayer}.${override.name}`, override.css));
         }
@@ -158,11 +173,17 @@ async function bundleWithESBuild(baseComponents, sectionComponents, projectRoot,
       if (cssContents.length > 0) {
         /*
          * 1. Concatenate main CSS with all component CSS. The layer order
-         *    statement goes first so precedence comes from configuration
-         *    rather than from concatenation order.
+         *    statements go first so precedence comes from configuration and
+         *    dependency order rather than from concatenation order.
          */
-        const orderStatement = options.layers?.enabled ? layerOrderStatement(options.layers.order) : '';
-        const combinedCSS = [orderStatement, ...cssContents].filter(Boolean).join('\n\n');
+        const layerStatements = options.layers?.enabled
+          ? [
+              layerOrderStatement(options.layers.order),
+              sublayerOrderStatement(options.layers.componentsLayer, orderedNames),
+              sublayerOrderStatement(options.layers.siteLayer, overrideNames)
+            ]
+          : [];
+        const combinedCSS = [...layerStatements, ...cssContents].filter(Boolean).join('\n\n');
 
         // 2. Copy concatenated CSS to temp directory as main.css
         const tempMainCSS = path.join(tempDir, 'main.css');

@@ -1,6 +1,10 @@
 import { strict as assert } from 'node:assert';
 import { describe, it } from 'node:test';
-import { filterNeededComponents, resolveAllDependencies } from '../../src/utils/dependency-resolver.js';
+import {
+  filterNeededComponents,
+  resolveAllDependencies,
+  sortByDependencyOrder
+} from '../../src/utils/dependency-resolver.js';
 
 describe('Dependency Resolver', () => {
   describe('resolveAllDependencies()', () => {
@@ -170,6 +174,76 @@ describe('Dependency Resolver', () => {
       const result = filterNeededComponents(allComponents, needed);
       assert.equal(result.length, 2);
       assert.deepEqual(result, allComponents);
+    });
+  });
+  describe('sortByDependencyOrder()', () => {
+    it('places a dependency before its dependent even when the input order is inverted', () => {
+      // "artwork" sorts before "commons" alphabetically but requires it
+      const components = [
+        { name: 'artwork', requires: ['commons'] },
+        { name: 'commons', requires: [] }
+      ];
+
+      const result = sortByDependencyOrder(components).map((c) => c.name);
+      assert.deepEqual(result, ['commons', 'artwork']);
+    });
+
+    it('keeps the incoming order for components without requirement edges', () => {
+      const components = [{ name: 'beta' }, { name: 'alpha' }, { name: 'gamma' }];
+
+      const result = sortByDependencyOrder(components).map((c) => c.name);
+      assert.deepEqual(result, ['beta', 'alpha', 'gamma']);
+    });
+
+    it('orders transitive chains dependency-first', () => {
+      const components = [
+        { name: 'hero', requires: ['button'] },
+        { name: 'button', requires: ['icon'] },
+        { name: 'icon', requires: [] }
+      ];
+
+      const result = sortByDependencyOrder(components).map((c) => c.name);
+      assert.deepEqual(result, ['icon', 'button', 'hero']);
+    });
+
+    it('supports the legacy dependencies key', () => {
+      const components = [
+        { name: 'alert', dependencies: ['banner'] },
+        { name: 'banner', dependencies: [] }
+      ];
+
+      const result = sortByDependencyOrder(components).map((c) => c.name);
+      assert.deepEqual(result, ['banner', 'alert']);
+    });
+
+    it('ignores requirements that are not in the component list', () => {
+      const components = [{ name: 'hero', requires: ['missing'] }, { name: 'button' }];
+
+      const result = sortByDependencyOrder(components).map((c) => c.name);
+      assert.deepEqual(result, ['hero', 'button']);
+    });
+
+    it('tolerates requirement cycles without throwing', () => {
+      const components = [
+        { name: 'a', requires: ['b'] },
+        { name: 'b', requires: ['a'] }
+      ];
+
+      const result = sortByDependencyOrder(components).map((c) => c.name);
+      assert.equal(result.length, 2);
+      assert.deepEqual([...result].sort(), ['a', 'b']);
+    });
+
+    it('returns a new array and leaves the input untouched', () => {
+      const components = [{ name: 'artwork', requires: ['commons'] }, { name: 'commons' }];
+      const snapshot = components.map((c) => c.name);
+
+      const result = sortByDependencyOrder(components);
+      assert.notEqual(result, components);
+      assert.deepEqual(
+        components.map((c) => c.name),
+        snapshot
+      );
     });
   });
 });

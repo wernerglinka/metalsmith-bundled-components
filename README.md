@@ -179,6 +179,7 @@ The bundle then looks like this:
 
 ```css
 @layer tokens, base, components, site;
+@layer components.button, components.hero;
 
 /* main.css, exactly as authored */
 
@@ -196,6 +197,8 @@ Anything in `site` beats anything in `components`, whatever its specificity and 
 **Overrides** live at `<overridesPath>/<name>/<name>.css`, mirroring how components themselves are laid out. They are picked up only for components the build actually uses, so a site that overrides nothing ships nothing extra, and an override for an unused component costs nothing.
 
 **Sublayer names** keep devtools attribution readable: you can see that a rule came from `components.hero` rather than from an anonymous blob of concatenated CSS.
+
+**Sublayers are declared in dependency order.** Within a parent layer, later-declared sublayers win, so the bundler declares each component's sublayer after the sublayers of everything it `requires`. A shared base section that every component requires (a `commons` section, say) is therefore declared first and ranks lowest, and any component that builds on it can override its rules — regardless of specificity, of where either component's rules sit in the bundle, or of how the component names happen to sort.
 
 **Only assembled CSS is wrapped.** The main entry is hand-authored and passes through exactly as written, which is where a site declares its own `@layer` blocks if it wants them. A component stylesheet that begins with `@import` or `@charset` is also left unwrapped, since neither is valid inside a layer block; it keeps working, it just does not participate in layer precedence.
 
