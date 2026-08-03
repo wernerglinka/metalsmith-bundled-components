@@ -39,7 +39,7 @@
   "dependencies": {
     "esbuild": "0.28.1",
     "esbuild-plugin-postcss": "0.3.0",
-    "postcss": "8.5.20"
+    "postcss": "8.5.25"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.4",
